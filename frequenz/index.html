@@ -257,7 +257,7 @@ function emptyEntry(date){
   return {
     date: date,
     morning: { level:null, emotion:"", gefuehl:"", absicht:"", dank:["","",""] },
-    day:     { zeichen:"", frei:"" },
+    day:     { zeichen:"", frei:"", booster:[] },
     evening: { level:null, gelungen:"", dankbar:"", losgelassen:"", morgen:"" },
     updatedAt: null
   };
@@ -267,6 +267,7 @@ var DEFAULTS = {
   name: "",
   journal: {},        // "2026-08-23": entry
   goals: [],
+  customBoosters: [],   // selbst ergänzte Frequenz-Booster
   program: null,      // {start:"2026-08-24", weeks:[{title,fokus,aufgabe,tage:[bool x7],reflexion}]}
   createdAt: null,
   lastSync: null,     // Zeitpunkt der letzten erfolgreichen Synchronisation
@@ -326,6 +327,7 @@ function entryOf(date, create){
 function hasContent(e){
   if(!e) return false;
   if(e.morning.level !== null || e.evening.level !== null) return true;
+  if((e.day.booster || []).length) return true;
   var txt = [e.morning.gefuehl, e.morning.absicht, e.morning.emotion, e.day.zeichen, e.day.frei,
              e.evening.gelungen, e.evening.dankbar, e.evening.losgelassen, e.evening.morgen]
             .concat(e.morning.dank).join("").trim();
@@ -366,7 +368,60 @@ var BOOSTERS = {
   high: ["5 Minuten Zielbild visualisieren","Affirmation 9x schreiben","Dankbarkeit für etwas, das noch kommt",
          "Einen mutigen Schritt Richtung Ziel gehen","Diesen Zustand kurz still genießen"]
 };
-function boostersFor(v){ return v < 45 ? BOOSTERS.low : (v < 75 ? BOOSTERS.mid : BOOSTERS.high); }
+function boostersFor(v){
+  var base = v < 45 ? BOOSTERS.low : (v < 75 ? BOOSTERS.mid : BOOSTERS.high);
+  return base.concat(S.customBoosters || []);
+}
+function boosterDone(day, text){
+  var e = S.journal[day];
+  return !!(e && (e.day.booster || []).indexOf(text) >= 0);
+}
+function toggleBooster(day, text){
+  var e = entryOf(day, true);
+  e.day.booster = e.day.booster || [];
+  var i = e.day.booster.indexOf(text);
+  if(i >= 0) e.day.booster.splice(i, 1); else e.day.booster.push(text);
+  e.updatedAt = Date.now(); e.dirty = true;
+  save(); syncSoon();
+  return i < 0;
+}
+/* Eine antippbare Booster-Liste. day = Tag, auf den sie gebucht wird. */
+function boosterList(day, level){
+  var list = boostersFor(level);
+  var done = (S.journal[day] && S.journal[day].day.booster) || [];
+  return list.map(function(t){
+    var isDone = done.indexOf(t) >= 0;
+    return `<button class="check ${isDone ? "done" : ""}" data-boost="${esc(t)}" data-boostday="${day}">
+      <span class="box">${isDone ? "✓" : "✦"}</span><span class="lbl small">${esc(t)}</span>
+    </button>`;
+  }).join("");
+}
+function bindBoosters(){
+  $$("[data-boost]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var on = toggleBooster(b.getAttribute("data-boostday"), b.getAttribute("data-boost"));
+      render();
+      if(on) toast("Gemacht ✦");
+    });
+  });
+  var add = $("#addBooster"), inp = $("#newBooster");
+  function addIt(){
+    var v = inp.value.trim();
+    if(!v) return;
+    S.customBoosters = S.customBoosters || [];
+    if(S.customBoosters.indexOf(v) < 0) S.customBoosters.push(v);
+    touchMeta(); save(); render(); toast("Booster ergänzt ✦");
+  }
+  if(add) add.addEventListener("click", addIt);
+  if(inp) inp.addEventListener("keydown", function(e){ if(e.key === "Enter") addIt(); });
+  $$("[data-delboost]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var t = b.getAttribute("data-delboost");
+      S.customBoosters = (S.customBoosters || []).filter(function(x){ return x !== t; });
+      touchMeta(); save(); render();
+    });
+  });
+}
 
 function dayLevel(e){
   if(!e) return null;
@@ -571,11 +626,12 @@ function viewTagebuch(){
     </details>
 
     ${dayLevel(e) !== null ? `<div class="card">
-      <h2>Frequenz-Booster</h2>
-      <div class="sub">Passend zu deinem heutigen Level.</div>
-      ${boostersFor(dayLevel(e)).map(function(t){
-        return `<div class="check" style="cursor:default"><span class="box">✦</span><span class="lbl small">${esc(t)}</span></div>`;
-      }).join("")}
+      <div class="between" style="margin-bottom:6px">
+        <h2>Frequenz-Booster</h2>
+        <span class="tag">${(e.day.booster || []).length}/${boostersFor(dayLevel(e)).length}</span>
+      </div>
+      <div class="sub">Passend zu deinem Level – tippe an, was du gemacht hast.</div>
+      ${boosterList(d, dayLevel(e))}
     </div>` : ""}
 
     <a class="btn wide" href="#/archiv" style="margin-bottom:14px">Archiv &amp; Suche</a>
@@ -606,6 +662,7 @@ function affirmationOfDay(d){
 
 function bindTagebuch(){
   updateCounts();
+  bindBoosters();
   $$("[data-sec]").forEach(function(d){
     d.addEventListener("toggle", function(){ ui.sections[d.getAttribute("data-sec")] = d.open; });
   });
@@ -906,7 +963,12 @@ function viewFrequenz(){
           <span class="box" style="${lvl === null ? "" : "background:"+bandOf(lvl).color+";border-color:transparent;color:#150c26;font-weight:700;font-size:12px"}">${lvl === null ? "" : lvl}</span>
           <span class="lbl">
             <div class="small">${fmtShort(k)}${e && e.morning.emotion ? " · " + esc(e.morning.emotion) : ""}</div>
-            <div class="tiny muted">${e && hasContent(e) ? countFilled([e.morning.gefuehl,e.morning.absicht,e.day.zeichen,e.day.frei,e.evening.gelungen,e.evening.dankbar,e.evening.losgelassen,e.evening.morgen].concat(e.morning.dank)) + " Felder geschrieben" : "leer – nachtragen?"}</div>
+            <div class="tiny muted">${(function(){
+              if(!e || !hasContent(e)) return "leer – nachtragen?";
+              var felder = countFilled([e.morning.gefuehl,e.morning.absicht,e.day.zeichen,e.day.frei,e.evening.gelungen,e.evening.dankbar,e.evening.losgelassen,e.evening.morgen].concat(e.morning.dank));
+              var boost = (e.day.booster || []).length;
+              return [felder ? felder + (felder === 1 ? " Feld" : " Felder") : "", boost ? boost + " Booster" : ""].filter(Boolean).join(" · ") || "nur Frequenz";
+            })()}</div>
           </span>
           <span class="muted">›</span>
         </button>`;
@@ -914,11 +976,21 @@ function viewFrequenz(){
     </div>
 
     <div class="card">
-      <h2>Frequenz heben</h2>
-      <div class="sub">Wirkt in dieser Reihenfolge am schnellsten.</div>
-      ${BOOSTERS.low.concat(BOOSTERS.high.slice(0,2)).map(function(t){
-        return `<div class="check" style="cursor:default"><span class="box">✦</span><span class="lbl small">${esc(t)}</span></div>`;
-      }).join("")}
+      <div class="between" style="margin-bottom:6px">
+        <h2>Frequenz heben</h2>
+        <span class="tag">heute ${((S.journal[dkey()] && S.journal[dkey()].day.booster) || []).length} erledigt</span>
+      </div>
+      <div class="sub">Antippen, sobald du es gemacht hast – das landet im heutigen Tagesbogen.</div>
+      ${boosterList(dkey(), dayLevel(S.journal[dkey()]) === null ? 50 : dayLevel(S.journal[dkey()]))}
+      ${(S.customBoosters || []).length ? `<div class="tiny muted" style="margin-top:12px">Eigene Booster entfernen:</div>
+        <div class="chips" style="margin-top:6px">${S.customBoosters.map(function(t){
+          return `<button class="chip" data-delboost="${esc(t)}">${esc(t)} ×</button>`;
+        }).join("")}</div>` : ""}
+      <label class="f">Eigenen Booster ergänzen</label>
+      <div class="row">
+        <input type="text" id="newBooster" maxlength="80" placeholder="Was hebt dich zuverlässig?" />
+        <button class="btn primary sm" id="addBooster">+</button>
+      </div>
       <button class="btn wide mt" id="openBreath2">Box-Atmung starten</button>
     </div>
   `;
@@ -961,6 +1033,7 @@ function stat(label, val){
     <div style="font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:2px">${esc(val)}</div></div>`;
 }
 function bindFrequenz(){
+  bindBoosters();
   $("#openBreath2").addEventListener("click", openBreath);
   $$("[data-day]").forEach(function(b){
     b.addEventListener("click", function(){
@@ -1264,6 +1337,7 @@ function journalAsText(){
     if(e.morning.absicht)  out.push("Wie ich mich fühlen will:\n" + e.morning.absicht + "\n");
     var dank = e.morning.dank.filter(Boolean);
     if(dank.length)        out.push("Dankbarkeit:\n" + dank.map(function(x){ return "· " + x; }).join("\n") + "\n");
+    if((e.day.booster || []).length) out.push("Frequenz-Booster:\n" + e.day.booster.map(function(x){ return "· " + x; }).join("\n") + "\n");
     if(e.day.zeichen)      out.push("Zeichen & Synchronizitäten:\n" + e.day.zeichen + "\n");
     if(e.day.frei)         out.push("Freies Schreiben:\n" + e.day.frei + "\n");
     if(e.evening.gelungen) out.push("Gelungen:\n" + e.evening.gelungen + "\n");
@@ -1441,7 +1515,7 @@ function mergeRemote(jrows, grows, mrows){
       var e = emptyEntry(row.date);
       if(row.data){
         if(row.data.morning) e.morning = Object.assign(e.morning, row.data.morning);
-        if(row.data.day)     e.day     = Object.assign(e.day, row.data.day);
+        if(row.data.day)     e.day     = Object.assign(e.day, row.data.day, {booster: row.data.day.booster || []});
         if(row.data.evening) e.evening = Object.assign(e.evening, row.data.evening);
       }
       e.updatedAt = rts; e.dirty = false;
@@ -1467,6 +1541,7 @@ function mergeRemote(jrows, grows, mrows){
     if(rts > (S.metaUpdatedAt || 0)){
       if(m.data && typeof m.data.name === "string") S.name = m.data.name;
       if(m.data && m.data.program !== undefined) S.program = m.data.program;
+      if(m.data && Array.isArray(m.data.customBoosters)) S.customBoosters = m.data.customBoosters;
       S.metaUpdatedAt = rts; S.metaDirty = false;
       changed = true;
     }
@@ -1508,7 +1583,8 @@ function doSync(silent){
         }
       });
       if(S.metaDirty || first){
-        mrow = { user_id:uid_, data:{ name:S.name, program:S.program }, updated_at: S.metaUpdatedAt || Date.now() };
+        mrow = { user_id:uid_, data:{ name:S.name, program:S.program, customBoosters:S.customBoosters || [] },
+                 updated_at: S.metaUpdatedAt || Date.now() };
       }
 
       var jobs = [];

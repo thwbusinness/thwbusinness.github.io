@@ -11,7 +11,7 @@ zusammenlaufen – begleitend zu einem 8-Wochen-Manifestationsprogramm.
 |---|---|
 | **Tagebuch** | Ein Tagesbogen pro Tag: Morgenseite (Frequenz, Emotion, „Wie fühle ich mich?", „Wie will ich mich fühlen?", 3x Dankbarkeit), Tagsüber (Zeichen & Synchronizitäten, freies Schreiben), Abendseite (gelungen / dankbar / losgelassen / wie will ich morgen aufwachen). Autosave, Blättern durch alle Tage, Nachtragen jederzeit möglich. |
 | **8 Wochen** | Programm mit Startdatum, 8 Wochenkarten mit je 7 Tageshaken, editierbarem Titel, Fokus, Aufgabe und Wochenreflexion. Die Vorbelegung ist ein Gerüst – überschreibbar mit den Kapiteln des eigenen Buches. |
-| **Frequenz** | 30-Tage-Verlaufskurve, Ø-Werte, Streak, häufigste Emotion, Wochenüberblick zum direkten Nachtragen, Booster-Liste, Box-Atmung. |
+| **Frequenz** | 30-Tage-Verlaufskurve, Ø-Werte, Streak, häufigste Emotion, Wochenüberblick zum direkten Nachtragen, abhakbare Booster (eigene ergänzbar), Box-Atmung. |
 | **Ziele** | Manifestationsziele im Präsens, Vertrauens-Level, Schreibmethoden 3-6-9 / 55x5 mit Tageszähler, „Ist eingetroffen"-Archiv. |
 | **Archiv** | Alle Einträge chronologisch, Volltextsuche, Sprung zum jeweiligen Tag. |
 | **Mehr** | Konto & Sync, Name, JSON-Backup & Import, Tagebuch als Textdatei exportieren, Reset. |
