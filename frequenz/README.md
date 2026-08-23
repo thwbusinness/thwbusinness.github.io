@@ -14,7 +14,7 @@ zusammenlaufen – begleitend zu einem 8-Wochen-Manifestationsprogramm.
 | **Frequenz** | 30-Tage-Verlaufskurve, Ø-Werte, Streak, häufigste Emotion, Wochenüberblick zum direkten Nachtragen, abhakbare Booster (eigene ergänzbar), Box-Atmung. |
 | **Ziele** | Manifestationsziele im Präsens, Vertrauens-Level, Schreibmethoden 3-6-9 / 55x5 mit Tageszähler, „Ist eingetroffen"-Archiv. |
 | **Archiv** | Alle Einträge chronologisch, Volltextsuche, Sprung zum jeweiligen Tag. |
-| **Mehr** | Konto & Sync, Name, JSON-Backup & Import, Tagebuch als Textdatei exportieren, Reset. |
+| **Mehr** | Konto & Sync (Passwort ändern, Konto löschen), Erinnerungen, Name, JSON-Backup & Import, Tagebuch als Textdatei exportieren, Reset. |
 
 ## Wann zählt ein Tag?
 
@@ -27,6 +27,32 @@ Ein Tag zählt für das 8-Wochen-Programm, wenn drei Dinge im Tagesbogen stehen:
 Der Fortschritt lässt sich damit nicht per Häkchen erzeugen – er entsteht aus dem,
 was tatsächlich geschrieben wurde. Im Tagebuch zeigt die Karte *Tagesabschluss* live,
 was noch fehlt.
+
+## Erinnerungen (Web Push)
+
+Morgens und abends ein Stups aufs Handy – übersprungen, wenn der Tag schon steht.
+Einrichtung in vier Schritten:
+
+1. **Schlüsselpaar erzeugen:** `npx web-push generate-vapid-keys`
+2. **Öffentlichen Teil** in `config.js` bei `vapidPublicKey` eintragen.
+3. **Datenbank vorbereiten:** `supabase-push.sql` im SQL-Editor ausführen; danach die
+   Extensions `pg_cron` und `pg_net` aktivieren und den auskommentierten
+   `cron.schedule`-Block mit Projekt-Ref und einem selbst gewählten `CRON_SECRET` ausführen.
+4. **Funktion deployen:**
+   ```
+   supabase functions deploy send-reminders --no-verify-jwt
+   supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... \
+                        VAPID_SUBJECT=mailto:deine@adresse.de CRON_SECRET=...
+   ```
+
+Der private Schlüssel gehört ausschließlich in die Supabase-Secrets, nie ins Repository.
+
+**Auf dem iPhone** funktionieren Mitteilungen nur, wenn die App über *Teilen → Zum
+Home-Bildschirm* installiert ist und von dort geöffnet wird (Vorgabe von iOS seit 16.4).
+
+Die Funktion läuft alle fünf Minuten, vergleicht die Ortszeit jeder Anmeldung mit den
+eingestellten Uhrzeiten und prüft vor dem Senden, ob der Tagesbogen an dieser Stelle
+schon ausgefüllt ist. Tote Anmeldungen (Antwort 404/410) werden automatisch entfernt.
 
 ## Registrierung & Anmeldung
 
@@ -69,6 +95,15 @@ solange nicht derselbe Tag parallel auf zwei Geräten offline bearbeitet wird.
 
 **Datenschutz:** Die Einträge liegen unverschlüsselt in der Datenbank. Wer Zugriff auf das
 Supabase-Projekt hat, kann sie lesen. Für Klientendaten ist das mitzudenken.
+
+**Konto löschen:** Unter *Mehr → Konto & Sync → Konto löschen* entfernt die App alle
+serverseitigen Daten und anschließend das Konto selbst (SQL-Funktion `delete_own_account`
+aus `supabase.sql`). Vorher bietet sie ein Backup an.
+
+**Vor dem ersten Klientenzugang** durchgehen: `supabase-mailvorlagen.md` (deutsche
+Mailtexte, eigener SMTP-Versand), `ENTWURF-datenschutz.md` und `ENTWURF-impressum.md`
+ausfüllen und prüfen lassen, Projektregion kontrollieren (EU), und einen bezahlten
+Supabase-Plan wegen der Sicherungen erwägen.
 
 ## Technik
 

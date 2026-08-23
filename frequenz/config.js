@@ -9,5 +9,11 @@
    lassen sich dann in der App unter "Mehr" hinterlegen. */
 window.FREQUENZ_CONFIG = {
   url: "https://rqgjpnmiudgcvowiuefx.supabase.co",
-  anonKey: "sb_publishable_YMOtUpe7rkVNHOEuOlmxjg_T2r2bWOD"
+  anonKey: "sb_publishable_YMOtUpe7rkVNHOEuOlmxjg_T2r2bWOD",
+
+  /* Öffentlicher VAPID-Schlüssel für Push-Erinnerungen.
+     Erzeugen mit:  npx web-push generate-vapid-keys
+     Der öffentliche Teil kommt hierhin, der private als Secret
+     VAPID_PRIVATE_KEY in die Supabase Edge Function. */
+  vapidPublicKey: ""
 };

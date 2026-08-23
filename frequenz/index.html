@@ -265,22 +265,27 @@ function emptyEntry(date){
     updatedAt: null
   };
 }
-var DEFAULTS = {
-  version: 2,
-  name: "",
-  journal: {},        // "2026-08-23": entry
-  goals: [],
-  customBoosters: [],   // selbst ergänzte Frequenz-Booster
-  program: null,      // {start:"2026-08-24", weeks:[{title,fokus,aufgabe,tage:[bool x7],reflexion}]}
-  createdAt: null,
-  lastSync: null,     // Zeitpunkt der letzten erfolgreichen Synchronisation
-  metaUpdatedAt: 0,   // Name + Programm (für die Konfliktauflösung)
-  metaDirty: false
-};
+/* Jedes Mal ein frisches Objekt: eine geteilte Vorlage würde beim
+   Schreiben mitverändert – dann räumt ein Zurücksetzen nichts weg. */
+function DEFAULTS(){
+  return {
+    version: 2,
+    name: "",
+    journal: {},        // "2026-08-23": entry
+    goals: [],
+    customBoosters: [],   // selbst ergänzte Frequenz-Booster
+    reminders: null,      // {enabled, morning, evening}
+    program: null,      // {start:"2026-08-24", weeks:[{title,fokus,aufgabe,tage:[bool x7],reflexion}]}
+    createdAt: null,
+    lastSync: null,     // Zeitpunkt der letzten erfolgreichen Synchronisation
+    metaUpdatedAt: 0,   // Name + Programm (für die Konfliktauflösung)
+    metaDirty: false
+  };
+}
 
 function migrate(s){
   if(!s || typeof s !== "object") s = {};
-  s = Object.assign({}, DEFAULTS, s);
+  s = Object.assign({}, DEFAULTS(), s);
   s.journal = s.journal || {};
   if(s.version < 2){
     // v1 (checkins / gratitude / reflections) in Tagesbögen überführen
@@ -1334,12 +1339,37 @@ function accountCard(){
     </div>
     <p class="tiny muted mt">Geschrieben wird immer zuerst lokal – der Abgleich läuft im Hintergrund
       und holt nach, sobald du wieder Netz hast.</p>
+
+    <details class="sec" style="margin:16px -4px 0;background:transparent;border-color:var(--line)">
+      <summary style="padding:12px 10px;font-size:15px"><span class="ico">🔑</span> Passwort ändern</summary>
+      <div class="body" style="padding:0 10px 14px">
+        <label class="f">Neues Passwort</label>
+        <input type="password" id="pwNeu" placeholder="mindestens 8 Zeichen" autocomplete="new-password" />
+        <label class="f">Wiederholen</label>
+        <input type="password" id="pwNeu2" placeholder="zur Sicherheit nochmal" autocomplete="new-password" />
+        <button class="btn wide mt" id="btnPwChange">Passwort speichern</button>
+        <p class="tiny muted mt" id="pwHinweis">Andere Geräte müssen sich danach neu anmelden.</p>
+      </div>
+    </details>
+
+    <details class="sec" style="margin:10px -4px 0;background:transparent;border-color:var(--line)">
+      <summary style="padding:12px 10px;font-size:15px;color:var(--rose)"><span class="ico">⚠️</span> Konto löschen</summary>
+      <div class="body" style="padding:0 10px 14px">
+        <p class="small muted">Löscht dein Konto und <b>alle</b> Einträge, Ziele und Programmdaten auf dem
+          Server – endgültig. Was auf diesem Gerät liegt, kannst du danach separat löschen.</p>
+        <button class="btn wide mt" id="btnExportVorLoeschen">Vorher Backup herunterladen</button>
+        <label class="f">Zum Bestätigen <b>LÖSCHEN</b> eintippen</label>
+        <input type="text" id="delBestaetigung" placeholder="LÖSCHEN" />
+        <button class="btn wide mt" id="btnKontoLoeschen" style="color:var(--rose)">Konto endgültig löschen</button>
+      </div>
+    </details>
   </div>`;
 }
 
 function viewMehr(){
   return `
     ${accountCard()}
+    ${reminderCard()}
     <div class="card">
       <h2>Dein Name</h2>
       <div class="sub">Für die Begrüßung – bleibt nur auf diesem Gerät.</div>
@@ -1434,6 +1464,7 @@ function download(name, text, type){
 }
 function bindMehr(){
   bindAccount();
+  bindReminders();
   $("#saveName").addEventListener("click", function(){
     S.name = $("#nameInp").value.trim(); touchMeta(); save(); render(); toast("Gespeichert");
   });
@@ -1544,7 +1575,31 @@ function ensureToken(){
   if(!loggedIn()) return Promise.reject(new Error("Nicht angemeldet"));
   if(Date.now() < (sess.expires_at || 0)) return Promise.resolve();
   return api("/auth/v1/token?grant_type=refresh_token", {method:"POST", noAuth:true,
-    body: JSON.stringify({refresh_token: sess.refresh_token})}).then(storeToken);
+    body: JSON.stringify({refresh_token: sess.refresh_token})})
+    .then(storeToken)
+    .catch(function(e){
+      // Erneuern gescheitert: die Sitzung ist endgültig hin.
+      if(e && (e.status === 400 || e.status === 401 || e.status === 403)) sessionAbgelaufen();
+      throw e;
+    });
+}
+/* Eine tote Sitzung darf nicht still weiterlaufen – sonst schreibt man
+   weiter und nichts davon kommt je in der Datenbank an. */
+function sessionAbgelaufen(){
+  if(!loggedIn()) return;
+  setSession(null);
+  S.lastSync = null;          // beim nächsten Anmelden alles neu hochschieben
+  markiereAllesGeaendert();
+  save();
+  ui.auth.mode = "login";
+  ui.auth.msgOk = false;
+  ui.auth.msg = "Deine Sitzung ist abgelaufen. Bitte melde dich neu an – geschrieben ist alles noch da.";
+  render();
+}
+function markiereAllesGeaendert(){
+  Object.keys(S.journal).forEach(function(k){ S.journal[k].dirty = true; });
+  S.goals.forEach(function(g){ g.dirty = true; });
+  S.metaDirty = true;
 }
 
 var syncState = { running:false, error:null };
@@ -1610,6 +1665,7 @@ function mergeRemote(jrows, grows, mrows){
       if(m.data && typeof m.data.name === "string") S.name = m.data.name;
       if(m.data && m.data.program !== undefined) S.program = m.data.program;
       if(m.data && Array.isArray(m.data.customBoosters)) S.customBoosters = m.data.customBoosters;
+      if(m.data && m.data.reminders) S.reminders = m.data.reminders;
       S.metaUpdatedAt = rts; S.metaDirty = false;
       changed = true;
     }
@@ -1651,7 +1707,8 @@ function doSync(silent){
         }
       });
       if(S.metaDirty || first){
-        mrow = { user_id:uid_, data:{ name:S.name, program:S.program, customBoosters:S.customBoosters || [] },
+        mrow = { user_id:uid_, data:{ name:S.name, program:S.program, customBoosters:S.customBoosters || [],
+                                     reminders:S.reminders || null },
                  updated_at: S.metaUpdatedAt || Date.now() };
       }
 
@@ -1674,7 +1731,11 @@ function doSync(silent){
     })
     .catch(function(err){
       syncState.running = false;
-      syncState.error = err && err.message ? err.message : "unbekannter Fehler";
+      if(err && (err.status === 401 || err.status === 403)){
+        sessionAbgelaufen();
+        return false;
+      }
+      syncState.error = translateAuthError(err && err.message);
       paintSyncStatus();
       if(!silent) toast("Sync fehlgeschlagen: " + syncState.error);
       return false;
@@ -1742,6 +1803,53 @@ function bindAccount(){
       btnSync.disabled = false;
       if(ok) toast("Synchronisiert ✦");
     });
+  });
+
+  var pwBtn = $("#btnPwChange");
+  if(pwBtn) pwBtn.addEventListener("click", function(){
+    var a = $("#pwNeu").value, b2 = $("#pwNeu2").value;
+    var hinweis = $("#pwHinweis");
+    function sagen(t){ if(hinweis) hinweis.textContent = t; }
+    if(a.length < 8){ sagen("Das Passwort braucht mindestens 8 Zeichen."); return; }
+    if(a !== b2){ sagen("Die beiden Passwörter stimmen nicht überein."); return; }
+    pwBtn.disabled = true;
+    ensureToken()
+      .then(function(){ return authSetPassword(a); })
+      .then(function(){
+        pwBtn.disabled = false;
+        $("#pwNeu").value = ""; $("#pwNeu2").value = "";
+        sagen("Passwort geändert ✦");
+        toast("Passwort geändert ✦");
+      })
+      .catch(function(e){
+        pwBtn.disabled = false;
+        sagen(translateAuthError(e && e.message));
+      });
+  });
+
+  var expBtn = $("#btnExportVorLoeschen");
+  if(expBtn) expBtn.addEventListener("click", function(){
+    download("frequenz-backup-" + dkey() + ".json", JSON.stringify(S, null, 2), "application/json");
+  });
+
+  var delBtn = $("#btnKontoLoeschen");
+  if(delBtn) delBtn.addEventListener("click", function(){
+    var wort = ($("#delBestaetigung").value || "").trim().toUpperCase();
+    if(wort !== "LÖSCHEN" && wort !== "LOESCHEN"){ toast("Bitte LÖSCHEN eintippen"); return; }
+    if(!confirm("Wirklich alles löschen? Konto und sämtliche Einträge auf dem Server sind danach weg.")) return;
+    delBtn.disabled = true;
+    kontoLoeschen()
+      .then(function(){
+        toast("Konto gelöscht");
+        setSession(null);
+        setLocalOnly(false);
+        ui.auth.mode = "start"; ui.auth.msg = "";
+        render();
+      })
+      .catch(function(e){
+        delBtn.disabled = false;
+        toast("Löschen fehlgeschlagen: " + translateAuthError(e && e.message));
+      });
   });
 
   var btnLogout = $("#btnLogout");
@@ -1856,6 +1964,30 @@ function authRecover(email){
   return api("/auth/v1/recover?redirect_to=" + encodeURIComponent(redirectTarget()), {
     method:"POST", noAuth:true, body: JSON.stringify({ email:email })
   });
+}
+/* Konto löschen: erst die eigenen Zeilen, dann das Konto selbst.
+   Die Funktion delete_own_account steckt in supabase.sql. */
+function kontoLoeschen(){
+  var uid_ = sess.user.id;
+  return ensureToken()
+    .then(function(){
+      return Promise.all([
+        api("/rest/v1/journal_entries?user_id=eq." + uid_, {method:"DELETE"}),
+        api("/rest/v1/goals?user_id=eq." + uid_,           {method:"DELETE"}),
+        api("/rest/v1/app_meta?user_id=eq." + uid_,        {method:"DELETE"}),
+        api("/rest/v1/push_subscriptions?user_id=eq." + uid_, {method:"DELETE"}).catch(function(){ return null; })
+      ]);
+    })
+    .then(function(){
+      // Konto selbst entfernen – braucht die SQL-Funktion aus supabase.sql
+      return api("/rest/v1/rpc/delete_own_account", {method:"POST", body:"{}"});
+    })
+    .then(function(){
+      localStorage.removeItem(KEY);
+      S = migrate(null);
+      save();
+      return true;
+    });
 }
 function authSetPassword(pw){
   return api("/auth/v1/user", { method:"PUT", body: JSON.stringify({ password: pw }) });
@@ -2053,6 +2185,214 @@ function translateAuthError(msg){
   if(/Failed to fetch|NetworkError/i.test(msg))   return "Keine Verbindung zum Server. Bist du online?";
   if(/relation .* does not exist/i.test(msg))     return "Die Datenbank ist noch nicht eingerichtet (supabase.sql ausführen).";
   return msg || "Unbekannter Fehler.";
+}
+
+
+/* =========================================================
+   Erinnerungen (Web Push)
+
+   Der Browser meldet sich beim Push-Dienst an, die Anmeldung
+   landet in der Tabelle push_subscriptions. Eine geplante
+   Funktion in Supabase schickt zur eingestellten Uhrzeit die
+   Nachricht – und lässt sie aus, wenn der Tag schon steht.
+   ========================================================= */
+function pushSupported(){
+  return ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window);
+}
+function vapidKey(){ return (CFG && CFG.vapidPublicKey) || ""; }
+function remindersReady(){ return pushSupported() && syncConfigured() && !!vapidKey() && loggedIn(); }
+
+function defaultReminders(){
+  return { enabled:false, morning:"07:30", evening:"21:00" };
+}
+function reminders(){
+  S.reminders = Object.assign(defaultReminders(), S.reminders || {});
+  return S.reminders;
+}
+function timeZone(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Berlin"; }
+  catch(e){ return "Europe/Berlin"; }
+}
+function urlBase64ToUint8Array(base64String){
+  var padding = "=".repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  var raw = atob(base64);
+  var out = new Uint8Array(raw.length);
+  for(var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function subToRow(sub){
+  var json = sub.toJSON();
+  var r = reminders();
+  return {
+    user_id: sess.user.id,
+    endpoint: json.endpoint,
+    p256dh: json.keys && json.keys.p256dh,
+    auth: json.keys && json.keys.auth,
+    morning: r.enabled ? r.morning : null,
+    evening: r.enabled ? r.evening : null,
+    tz: timeZone(),
+    updated_at: Date.now()
+  };
+}
+function saveSubscription(sub){
+  return api("/rest/v1/push_subscriptions?on_conflict=endpoint", {
+    method:"POST",
+    headers:{ "Prefer":"resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify([subToRow(sub)])
+  });
+}
+function currentSubscription(){
+  if(!pushSupported()) return Promise.resolve(null);
+  return navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); });
+}
+
+/* Erinnerungen einschalten: Erlaubnis holen, anmelden, hinterlegen. */
+function enableReminders(){
+  if(!pushSupported()) return Promise.reject(new Error("Dieser Browser kann keine Erinnerungen."));
+  if(!vapidKey())      return Promise.reject(new Error("Für dieses Projekt ist noch kein Push-Schlüssel hinterlegt."));
+  if(!loggedIn())      return Promise.reject(new Error("Dafür musst du angemeldet sein."));
+
+  return Notification.requestPermission().then(function(perm){
+    if(perm !== "granted") throw new Error("Ohne Erlaubnis für Mitteilungen geht es nicht. Das lässt sich in den iPhone-Einstellungen unter Mitteilungen wieder ändern.");
+    return navigator.serviceWorker.ready;
+  }).then(function(reg){
+    return reg.pushManager.getSubscription().then(function(existing){
+      if(existing) return existing;
+      return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey())
+      });
+    });
+  }).then(function(sub){
+    reminders().enabled = true;
+    touchMeta(); save();
+    return ensureToken().then(function(){ return saveSubscription(sub); });
+  });
+}
+
+/* Ausschalten: Anmeldung zurückziehen und Zeiten leeren. */
+function disableReminders(){
+  reminders().enabled = false;
+  touchMeta(); save();
+  return currentSubscription().then(function(sub){
+    if(!sub) return null;
+    var endpoint = sub.toJSON().endpoint;
+    return sub.unsubscribe().catch(function(){}).then(function(){
+      if(!loggedIn()) return null;
+      return ensureToken().then(function(){
+        return api("/rest/v1/push_subscriptions?endpoint=eq." + encodeURIComponent(endpoint), { method:"DELETE" });
+      });
+    });
+  }).catch(function(){ return null; });
+}
+
+/* Zeiten geändert: bestehende Anmeldung aktualisieren. */
+function syncReminderTimes(){
+  if(!remindersReady() || !reminders().enabled) return Promise.resolve(false);
+  return currentSubscription().then(function(sub){
+    if(!sub) return false;
+    return ensureToken().then(function(){ return saveSubscription(sub); }).then(function(){ return true; });
+  }).catch(function(){ return false; });
+}
+
+function translatePushError(msg){
+  msg = String(msg || "");
+  if(/permission denied|not allowed|NotAllowedError/i.test(msg))
+    return "Der Browser hat die Anmeldung abgelehnt. Auf dem iPhone muss die App vom Home-Bildschirm aus geöffnet sein.";
+  if(/Registration failed|AbortError|push service/i.test(msg))
+    return "Der Push-Dienst hat die Anmeldung abgelehnt. Prüfe, ob der VAPID-Schlüssel zum Projekt passt.";
+  if(/applicationServerKey|InvalidAccessError|InvalidCharacterError/i.test(msg))
+    return "Der hinterlegte Push-Schlüssel ist ungültig.";
+  if(/Failed to fetch|NetworkError/i.test(msg))
+    return "Keine Verbindung zum Server. Bist du online?";
+  return msg;
+}
+function reminderStatus(){
+  if(!pushSupported())  return "Dieser Browser unterstützt keine Erinnerungen.";
+  if(!syncConfigured()) return "Erst ein Konto verbinden.";
+  if(!loggedIn())       return "Dafür musst du angemeldet sein.";
+  if(!vapidKey())       return "Für dieses Projekt ist noch kein Push-Schlüssel hinterlegt (siehe README).";
+  if(Notification.permission === "denied") return "Mitteilungen sind für diese Seite blockiert – das lässt sich nur in den Systemeinstellungen wieder erlauben.";
+  if(!reminders().enabled) return "Aus.";
+  return "An · morgens " + reminders().morning + " · abends " + reminders().evening;
+}
+
+function reminderCard(){
+  var r = reminders();
+  var moeglich = remindersReady() && Notification.permission !== "denied";
+  var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+  var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  return `<div class="card">
+    <div class="between" style="margin-bottom:6px">
+      <h2>Erinnerungen</h2>
+      <span class="tag" style="${r.enabled ? "color:var(--mint)" : ""}">${r.enabled ? "an" : "aus"}</span>
+    </div>
+    <div class="sub">Ein Stups morgens und abends – wird übersprungen, wenn der Tag schon steht.</div>
+
+    ${iOS && !standalone ? `<p class="small" style="color:var(--gold)">Auf dem iPhone gehen Mitteilungen nur,
+      wenn die App über <b>Teilen → Zum Home-Bildschirm</b> installiert ist. Öffne sie danach von dort aus.</p>` : ""}
+
+    <div class="grid2">
+      <div><label class="f">Morgens</label>
+        <input type="time" id="remMorning" step="300" value="${esc(r.morning)}" ${moeglich ? "" : "disabled"} /></div>
+      <div><label class="f">Abends</label>
+        <input type="time" id="remEvening" step="300" value="${esc(r.evening)}" ${moeglich ? "" : "disabled"} /></div>
+    </div>
+
+    <button class="btn ${r.enabled ? "" : "primary"} wide mt" id="remToggle" ${moeglich || r.enabled ? "" : "disabled"}>
+      ${r.enabled ? "Erinnerungen ausschalten" : "Erinnerungen einschalten"}
+    </button>
+    <p class="tiny muted mt" id="remStatus">${esc(reminderStatus())}</p>
+    ${r.enabled ? `<button class="btn ghost wide mt tiny" id="remTest">Testmitteilung anzeigen</button>` : ""}
+  </div>`;
+}
+
+function bindReminders(){
+  var t = $("#remToggle");
+  if(t) t.addEventListener("click", function(){
+    t.disabled = true;
+    var an = reminders().enabled;
+    (an ? disableReminders() : enableReminders())
+      .then(function(){
+        render();
+        toast(an ? "Erinnerungen aus" : "Erinnerungen an ✦");
+      })
+      .catch(function(e){
+        t.disabled = false;
+        var text = translatePushError(e && e.message);
+        var st = $("#remStatus");
+        if(st) st.textContent = text;
+        toast(text);
+      });
+  });
+
+  ["remMorning","remEvening"].forEach(function(id){
+    var el = $("#" + id);
+    if(!el) return;
+    el.addEventListener("change", function(){
+      if(!el.value) return;
+      reminders()[id === "remMorning" ? "morning" : "evening"] = el.value;
+      touchMeta(); save();
+      syncReminderTimes().then(function(ok){
+        toast(ok ? "Zeit gespeichert ✦" : "Zeit gespeichert");
+        var st = $("#remStatus");
+        if(st) st.textContent = reminderStatus();
+      });
+    });
+  });
+
+  var test = $("#remTest");
+  if(test) test.addEventListener("click", function(){
+    if(!pushSupported() || Notification.permission !== "granted"){ toast("Keine Erlaubnis für Mitteilungen"); return; }
+    navigator.serviceWorker.ready.then(function(reg){
+      reg.showNotification("Frequenz-Tagebuch", {
+        body: "So sieht deine Erinnerung aus ✦",
+        icon: "./icon-192.png", badge: "./icon-192.png", tag: "test"
+      });
+    });
+  });
 }
 
 /* =========================================================

@@ -79,3 +79,33 @@ create trigger trg_goals_synced before insert or update on public.goals
 drop trigger if exists trg_meta_synced on public.app_meta;
 create trigger trg_meta_synced before insert or update on public.app_meta
   for each row execute function public.set_synced_at();
+
+-- ============================================================
+-- Konto selbst löschen (DSGVO: Recht auf Löschung)
+--
+-- Die App löscht zuerst die eigenen Zeilen und ruft dann diese
+-- Funktion auf. security definer erlaubt das Entfernen aus
+-- auth.users, ohne dass der Client Adminrechte braucht –
+-- gelöscht wird ausschließlich das eigene Konto.
+-- ============================================================
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  wer uuid := auth.uid();
+begin
+  if wer is null then
+    raise exception 'nicht angemeldet';
+  end if;
+
+  delete from public.journal_entries where user_id = wer;
+  delete from public.goals           where user_id = wer;
+  delete from public.app_meta        where user_id = wer;
+  delete from auth.users             where id      = wer;   -- Push-Anmeldungen hängen per cascade dran
+end $$;
+
+revoke all on function public.delete_own_account() from public, anon;
+grant execute on function public.delete_own_account() to authenticated;
