@@ -1,7 +1,7 @@
 /* Service Worker: App-Hülle offline verfügbar halten.
    Strategie: network-first mit Cache-Fallback – so ist ein Update
    sofort da, die App startet aber auch ohne Netz. */
-var CACHE = "frequenz-v5";
+var CACHE = "frequenz-v6";
 var ASSETS = ["./", "./index.html", "./config.js", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(e){

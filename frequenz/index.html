@@ -170,6 +170,8 @@ nav.tabs svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1
   background:#fff;color:#150c26;padding:11px 18px;border-radius:999px;font-weight:600;font-size:14px;
   opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:88vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+body.auth-mode header.top,body.auth-mode nav.tabs{display:none}
+body.auth-mode .app{padding-top:calc(28px + var(--safe-t));padding-bottom:40px}
 @keyframes pop{0%{transform:scale(.96);opacity:0}100%{transform:scale(1);opacity:1}}
 .pop{animation:pop .22s ease both}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -460,14 +462,21 @@ function field(path, placeholder, value){
 /* =========================================================
    Ansicht: TAGEBUCH (Tagesbogen)
    ========================================================= */
-var ui = { day: dkey(), goalForm:false, openGoal:null, editId:null, search:"", openWeek:null };
+var ui = { day: dkey(), goalForm:false, openGoal:null, editId:null, search:"", openWeek:null,
+           auth: { mode:"start", msg:"", msgOk:false, form:{name:"",mail:"",pw:"",pw2:""} },
+           sections: null };
 
 function viewTagebuch(){
   var d = ui.day, e = entryOf(d), today = dkey();
   var isToday = d === today;
-  var h = new Date().getHours();
-  var openM = isToday ? h < 14 : true;
-  var openE = isToday ? h >= 14 : false;
+  if(!ui.sections){
+    // Beim ersten Öffnen eines Tages nach Tageszeit vorbelegen …
+    var h = new Date().getHours();
+    ui.sections = isToday ? { morning: h < 14, day: false, evening: h >= 14 }
+                          : { morning: true,  day: false, evening: false };
+  }
+  // … danach entscheidet, was der Nutzer selbst auf- oder zugeklappt hat.
+  var openM = ui.sections.morning, openE = ui.sections.evening, openD = ui.sections.day;
   var wk = weekInfo(d);
   var aff = affirmationOfDay(d);
 
@@ -513,7 +522,7 @@ function viewTagebuch(){
       <button class="btn sm ghost" id="newAff" style="margin-top:10px">Andere zeigen</button>
     </div>
 
-    <details class="sec" ${openM ? "open" : ""}>
+    <details class="sec" data-sec="morning" ${openM ? "open" : ""}>
       <summary><span class="ico">☀️</span> Morgenseite <span class="cnt" data-cnt="morning"></span></summary>
       <div class="body">
         <label class="f">Frequenz am Morgen <b id="mLvlVal">${e.morning.level === null ? "–" : e.morning.level}</b></label>
@@ -534,7 +543,7 @@ function viewTagebuch(){
       </div>
     </details>
 
-    <details class="sec">
+    <details class="sec" data-sec="day" ${openD ? "open" : ""}>
       <summary><span class="ico">✦</span> Tagsüber <span class="cnt" data-cnt="day"></span></summary>
       <div class="body">
         <label class="f">Zeichen &amp; Synchronizitäten</label>
@@ -544,7 +553,7 @@ function viewTagebuch(){
       </div>
     </details>
 
-    <details class="sec" ${openE ? "open" : ""}>
+    <details class="sec" data-sec="evening" ${openE ? "open" : ""}>
       <summary><span class="ico">🌙</span> Abendseite <span class="cnt" data-cnt="evening"></span></summary>
       <div class="body">
         <label class="f">Frequenz am Abend <b id="eLvlVal">${e.evening.level === null ? "–" : e.evening.level}</b></label>
@@ -597,10 +606,13 @@ function affirmationOfDay(d){
 
 function bindTagebuch(){
   updateCounts();
-  $("#prevDay").addEventListener("click", function(){ ui.day = addDays(ui.day, -1); render(); });
+  $$("[data-sec]").forEach(function(d){
+    d.addEventListener("toggle", function(){ ui.sections[d.getAttribute("data-sec")] = d.open; });
+  });
+  $("#prevDay").addEventListener("click", function(){ ui.day = addDays(ui.day, -1); ui.sections = null; render(); });
   $("#nextDay").addEventListener("click", function(){
     if(ui.day >= dkey()) return;
-    ui.day = addDays(ui.day, 1); render();
+    ui.day = addDays(ui.day, 1); ui.sections = null; render();
   });
   $("#openBreath").addEventListener("click", openBreath);
   $("#newAff").addEventListener("click", function(){
@@ -1166,16 +1178,10 @@ function accountCard(){
   if(!loggedIn()){
     return `<div class="card">
       <h2>Konto &amp; Sync</h2>
-      <div class="sub">Anmelden, damit dein Tagebuch auf allen Geräten gleich ist.</div>
-      <label class="f">E-Mail</label>
-      <input type="text" id="authMail" placeholder="du@beispiel.de" autocomplete="username" />
-      <label class="f">Passwort</label>
-      <input type="password" id="authPw" placeholder="mindestens 8 Zeichen" autocomplete="current-password" />
-      <div class="row mt">
-        <button class="btn primary" id="btnLogin" style="flex:1">Anmelden</button>
-        <button class="btn" id="btnSignup">Konto anlegen</button>
-      </div>
-      <p class="tiny muted mt" id="syncStatus">${esc(syncStatusText())}</p>
+      <div class="sub">Du schreibst gerade ohne Konto – alle Einträge liegen nur auf diesem Gerät.</div>
+      <button class="btn primary wide" id="btnConnect">Konto anlegen oder anmelden</button>
+      <p class="tiny muted mt">Deine bisherigen Einträge gehen dabei nicht verloren: Sie werden beim
+        ersten Abgleich in dein Konto übernommen.</p>
       ${configIsLocal() ? `<button class="btn ghost wide mt tiny" id="cfgReset">Verbindung ändern</button>` : ""}
     </div>`;
   }
@@ -1539,6 +1545,12 @@ function syncSoon(){
 }
 
 function bindAccount(){
+  var connect = $("#btnConnect");
+  if(connect) connect.addEventListener("click", function(){
+    setLocalOnly(false);
+    ui.auth.mode = "start"; ui.auth.msg = "";
+    render();
+  });
   var cfgSave = $("#cfgSave");
   if(cfgSave) cfgSave.addEventListener("click", function(){
     var url = $("#cfgUrl").value.trim(), key = $("#cfgKey").value.trim();
@@ -1594,9 +1606,309 @@ function bindAccount(){
     btnLogout.disabled = true;
     doSync(true).then(function(){
       api("/auth/v1/logout", {method:"POST"}).catch(function(){});
-      setSession(null); render(); toast("Abgemeldet");
+      setSession(null);
+      ui.auth.mode = "start"; ui.auth.msg = "";
+      render(); toast("Abgemeldet");
     });
   });
+}
+
+
+/* =========================================================
+   Registrierung & Anmeldung
+
+   Wer die App zum ersten Mal öffnet, landet auf einem
+   Willkommensbildschirm: Konto anlegen, anmelden – oder bewusst
+   ohne Konto weitermachen (dann bleibt alles auf dem Gerät).
+   Bestätigungs- und Passwort-Links von Supabase kommen mit
+   Tokens im URL-Fragment zurück und werden hier eingelöst.
+   ========================================================= */
+var LOCAL_ONLY_KEY = "frequenz-local-only";
+function localOnly(){ return localStorage.getItem(LOCAL_ONLY_KEY) === "1"; }
+function setLocalOnly(v){
+  if(v) localStorage.setItem(LOCAL_ONLY_KEY, "1");
+  else localStorage.removeItem(LOCAL_ONLY_KEY);
+}
+function authGateActive(){
+  // Nach einem Passwort-Link ist man bereits angemeldet – der Bildschirm zum
+  // Setzen des neuen Passworts muss trotzdem erscheinen.
+  if(ui && ui.auth && ui.auth.mode === "newpw") return true;
+  return syncConfigured() && !loggedIn() && !localOnly();
+}
+function redirectTarget(){
+  return location.origin + location.pathname;
+}
+
+/* ---------- Tokens aus dem Rücksprung einlösen ---------- */
+function parseHashParams(){
+  var h = String(location.hash || "").replace(/^#\/?/, "");
+  if(h.indexOf("=") < 0) return null;
+  var out = {};
+  h.split("&").forEach(function(kv){
+    var i = kv.indexOf("=");
+    if(i < 0) return;
+    out[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i+1).replace(/\+/g, " "));
+  });
+  return out;
+}
+function fetchUser(){
+  return api("/auth/v1/user").then(function(u){
+    if(sess && u && u.id){ sess.user = u; setSession(sess); }
+    return u;
+  });
+}
+/* Gibt true zurück, wenn die URL ein Auth-Rücksprung war. */
+function consumeAuthHash(){
+  var p = parseHashParams();
+  if(!p) return false;
+  if(p.error || p.error_description){
+    ui.auth.mode = "login";
+    ui.auth.msg = p.error_description || p.error;
+    history.replaceState(null, "", redirectTarget() + "#/tagebuch");
+    return true;
+  }
+  if(!p.access_token) return false;
+
+  setSession({
+    access_token: p.access_token,
+    refresh_token: p.refresh_token,
+    expires_at: Date.now() + ((parseInt(p.expires_in, 10) || 3600) * 1000) - 60000,
+    user: null
+  });
+  var recovery = p.type === "recovery";
+  history.replaceState(null, "", redirectTarget() + "#/tagebuch");
+
+  fetchUser().then(function(){
+    setLocalOnly(false);
+    if(recovery){
+      ui.auth.mode = "newpw";
+      ui.auth.msg = "Bitte vergib jetzt ein neues Passwort.";
+      render();
+    }else{
+      render();
+      toast("E-Mail bestätigt – willkommen ✦");
+      doSync(true);
+    }
+  }).catch(function(e){
+    setSession(null);
+    ui.auth.mode = "login";
+    ui.auth.msg = "Der Link ist abgelaufen. Bitte melde dich an.";
+    render();
+  });
+  return true;
+}
+
+/* ---------- Auth-Aufrufe ---------- */
+function authRegister(name, email, pw){
+  return api("/auth/v1/signup?redirect_to=" + encodeURIComponent(redirectTarget()), {
+    method:"POST", noAuth:true,
+    body: JSON.stringify({ email:email, password:pw, data:{ name:name } })
+  }).then(function(d){
+    if(d && d.access_token) storeToken(d);
+    return d;
+  });
+}
+function authRecover(email){
+  return api("/auth/v1/recover?redirect_to=" + encodeURIComponent(redirectTarget()), {
+    method:"POST", noAuth:true, body: JSON.stringify({ email:email })
+  });
+}
+function authSetPassword(pw){
+  return api("/auth/v1/user", { method:"PUT", body: JSON.stringify({ password: pw }) });
+}
+
+/* ---------- Willkommensbildschirm ---------- */
+function authScreen(){
+  var m = ui.auth.mode || "start";
+  var f = ui.auth.form;
+  var msg = ui.auth.msg
+    ? `<p class="small" style="color:${ui.auth.msgOk ? "var(--mint)" : "var(--gold)"};margin-top:12px">${esc(ui.auth.msg)}</p>`
+    : "";
+
+  var head = `<div class="center" style="padding:8px 0 22px">
+      <div style="font-size:34px;line-height:1">✦</div>
+      <h1 style="font-size:24px;margin-top:10px">Frequenz-Tagebuch</h1>
+      <p class="small muted" style="margin-top:6px">Deine Frequenz führen. Täglich, an einem Ort.</p>
+    </div>`;
+
+  if(m === "signup"){
+    return head + `<div class="card pop">
+      <h2>Konto anlegen</h2>
+      <div class="sub">Damit dein Tagebuch auf allen Geräten gleich ist.</div>
+      <label class="f">Vorname</label>
+      <input type="text" id="regName" data-f="name" maxlength="40" value="${esc(f.name)}" placeholder="Wie sollen wir dich ansprechen?" autocomplete="given-name" />
+      <label class="f">E-Mail</label>
+      <input type="text" id="regMail" data-f="mail" value="${esc(f.mail)}" placeholder="du@beispiel.de" autocomplete="email" />
+      <label class="f">Passwort</label>
+      <input type="password" id="regPw" data-f="pw" value="${esc(f.pw)}" placeholder="mindestens 8 Zeichen" autocomplete="new-password" />
+      <label class="f">Passwort wiederholen</label>
+      <input type="password" id="regPw2" data-f="pw2" value="${esc(f.pw2)}" placeholder="zur Sicherheit nochmal" autocomplete="new-password" />
+      <button class="btn primary wide mt" id="doRegister">Konto anlegen</button>
+      ${msg}
+      <button class="btn ghost wide mt" data-mode="login">Ich habe schon ein Konto</button>
+    </div>`;
+  }
+  if(m === "login"){
+    return head + `<div class="card pop">
+      <h2>Anmelden</h2>
+      <div class="sub">Schön, dass du wieder da bist.</div>
+      <label class="f">E-Mail</label>
+      <input type="text" id="logMail" data-f="mail" value="${esc(f.mail)}" placeholder="du@beispiel.de" autocomplete="email" />
+      <label class="f">Passwort</label>
+      <input type="password" id="logPw" data-f="pw" value="${esc(f.pw)}" placeholder="dein Passwort" autocomplete="current-password" />
+      <button class="btn primary wide mt" id="doLogin">Anmelden</button>
+      ${msg}
+      <div class="row mt">
+        <button class="btn ghost sm" data-mode="reset">Passwort vergessen</button>
+        <button class="btn ghost sm" data-mode="signup">Neues Konto</button>
+      </div>
+    </div>`;
+  }
+  if(m === "reset"){
+    return head + `<div class="card pop">
+      <h2>Passwort zurücksetzen</h2>
+      <div class="sub">Wir schicken dir einen Link per E-Mail.</div>
+      <label class="f">E-Mail</label>
+      <input type="text" id="resMail" data-f="mail" value="${esc(f.mail)}" placeholder="du@beispiel.de" autocomplete="email" />
+      <button class="btn primary wide mt" id="doReset">Link anfordern</button>
+      ${msg}
+      <button class="btn ghost wide mt" data-mode="login">Zurück zur Anmeldung</button>
+    </div>`;
+  }
+  if(m === "newpw"){
+    return head + `<div class="card pop">
+      <h2>Neues Passwort</h2>
+      <div class="sub">Danach bist du direkt angemeldet.</div>
+      <label class="f">Neues Passwort</label>
+      <input type="password" id="npw1" data-f="pw" value="${esc(f.pw)}" placeholder="mindestens 8 Zeichen" autocomplete="new-password" />
+      <label class="f">Wiederholen</label>
+      <input type="password" id="npw2" data-f="pw2" value="${esc(f.pw2)}" placeholder="zur Sicherheit nochmal" autocomplete="new-password" />
+      <button class="btn primary wide mt" id="doNewPw">Passwort speichern</button>
+      ${msg}
+    </div>`;
+  }
+  return head + `<div class="card pop">
+    <p class="small muted">Morgens deine Frequenz festhalten, abends den Tag abschließen,
+      Ziele im Präsens formulieren – und das Ganze acht Wochen lang durchziehen.</p>
+    <button class="btn primary wide mt" data-mode="signup">Konto anlegen</button>
+    <button class="btn wide mt" data-mode="login">Anmelden</button>
+    ${msg}
+    <button class="btn ghost wide mt" id="skipAuth">Ohne Konto starten</button>
+    <p class="tiny muted mt">Ohne Konto bleiben alle Einträge nur auf diesem Gerät –
+      kein Abgleich mit anderen Geräten, kein Zugriff nach einem Gerätewechsel.</p>
+  </div>`;
+}
+
+function bindAuthScreen(){
+  // Getipptes im Zustand halten, damit eine Fehlermeldung das Formular nicht leert
+  $$("[data-f]").forEach(function(el){
+    el.addEventListener("input", function(){ ui.auth.form[el.getAttribute("data-f")] = el.value; });
+  });
+  $$("[data-mode]").forEach(function(b){
+    b.addEventListener("click", function(){
+      ui.auth.mode = b.getAttribute("data-mode");
+      ui.auth.msg = ""; ui.auth.msgOk = false;
+      render();
+    });
+  });
+  var skip = $("#skipAuth");
+  if(skip) skip.addEventListener("click", function(){
+    setLocalOnly(true);
+    render();
+    toast("Du kannst dich später jederzeit anmelden.");
+  });
+
+  function clearPw(){ ui.auth.form.pw = ""; ui.auth.form.pw2 = ""; }
+  function fail(btn, e){
+    btn.disabled = false;
+    ui.auth.msg = translateAuthError(e && e.message);
+    ui.auth.msgOk = false;
+    render();
+  }
+
+  var reg = $("#doRegister");
+  if(reg) reg.addEventListener("click", function(){
+    var name = (ui.auth.form.name || "").trim();
+    var mail = (ui.auth.form.mail || "").trim();
+    var pw = ui.auth.form.pw || "", pw2 = ui.auth.form.pw2 || "";
+    if(!/^\S+@\S+\.\S+$/.test(mail)){ ui.auth.msg = "Bitte eine gültige E-Mail-Adresse eingeben."; return render(); }
+    if(pw.length < 8){ ui.auth.msg = "Das Passwort braucht mindestens 8 Zeichen."; return render(); }
+    if(pw !== pw2){ ui.auth.msg = "Die beiden Passwörter stimmen nicht überein."; return render(); }
+    reg.disabled = true;
+    authRegister(name, mail, pw)
+      .then(function(d){
+        if(name){ S.name = name; touchMeta(); save(); }
+        if(d && d.access_token){
+          setLocalOnly(false);
+          clearPw(); render();
+          toast("Willkommen ✦");
+          return doSync(true);
+        }
+        ui.auth.mode = "login";
+        ui.auth.msgOk = true;
+        ui.auth.msg = "Fast geschafft: Wir haben dir eine Bestätigungsmail geschickt. Nach dem Klick auf den Link kannst du dich anmelden.";
+        clearPw(); render();
+      })
+      .catch(function(e){ fail(reg, e); });
+  });
+
+  var log = $("#doLogin");
+  if(log) log.addEventListener("click", function(){
+    var mail = (ui.auth.form.mail || "").trim(), pw = ui.auth.form.pw || "";
+    if(!mail || !pw){ ui.auth.msg = "Bitte E-Mail und Passwort eingeben."; return render(); }
+    log.disabled = true;
+    authSignIn(mail, pw)
+      .then(function(){
+        setLocalOnly(false);
+        clearPw(); render();
+        toast("Angemeldet ✦");
+        return doSync(true);
+      })
+      .catch(function(e){ fail(log, e); });
+  });
+
+  var res = $("#doReset");
+  if(res) res.addEventListener("click", function(){
+    var mail = (ui.auth.form.mail || "").trim();
+    if(!/^\S+@\S+\.\S+$/.test(mail)){ ui.auth.msg = "Bitte eine gültige E-Mail-Adresse eingeben."; return render(); }
+    res.disabled = true;
+    authRecover(mail)
+      .then(function(){
+        ui.auth.mode = "login";
+        ui.auth.msgOk = true;
+        ui.auth.msg = "Wenn es ein Konto mit dieser Adresse gibt, ist der Link unterwegs.";
+        render();
+      })
+      .catch(function(e){ fail(res, e); });
+  });
+
+  var npw = $("#doNewPw");
+  if(npw) npw.addEventListener("click", function(){
+    var a = ui.auth.form.pw || "", b2 = ui.auth.form.pw2 || "";
+    if(a.length < 8){ ui.auth.msg = "Das Passwort braucht mindestens 8 Zeichen."; return render(); }
+    if(a !== b2){ ui.auth.msg = "Die beiden Passwörter stimmen nicht überein."; return render(); }
+    npw.disabled = true;
+    authSetPassword(a)
+      .then(function(){
+        ui.auth.mode = "start"; ui.auth.msg = "";
+        clearPw(); render();
+        toast("Passwort gespeichert ✦");
+        return doSync(true);
+      })
+      .catch(function(e){ fail(npw, e); });
+  });
+}
+
+function translateAuthError(msg){
+  msg = String(msg || "");
+  if(/Invalid login credentials/i.test(msg))      return "E-Mail oder Passwort stimmt nicht.";
+  if(/already registered|already exists/i.test(msg)) return "Für diese E-Mail gibt es schon ein Konto – melde dich einfach an.";
+  if(/Email not confirmed/i.test(msg))            return "Bitte bestätige zuerst den Link in deiner E-Mail.";
+  if(/Password should be at least/i.test(msg))    return "Das Passwort ist zu kurz.";
+  if(/rate limit|too many/i.test(msg))            return "Zu viele Versuche. Bitte warte einen Moment.";
+  if(/Failed to fetch|NetworkError/i.test(msg))   return "Keine Verbindung zum Server. Bist du online?";
+  if(/relation .* does not exist/i.test(msg))     return "Die Datenbank ist noch nicht eingerichtet (supabase.sql ausführen).";
+  return msg || "Unbekannter Fehler.";
 }
 
 /* =========================================================
@@ -1656,6 +1968,13 @@ function updateStreakBadge(){
   $("#streakBadge").textContent = "✦ " + st + (st === 1 ? " Tag" : " Tage");
 }
 function render(){
+  var gate = authGateActive();
+  document.body.classList.toggle("auth-mode", gate);
+  if(gate){
+    $("#view").innerHTML = authScreen();
+    bindAuthScreen();
+    return;
+  }
   var key = currentRoute(), route = ROUTES[key];
   $("#hello").textContent = greeting();
   $("#pageTitle").textContent = route.title;
@@ -1665,19 +1984,25 @@ function render(){
   route.bind();
   $$("nav.tabs a").forEach(function(a){ a.classList.toggle("on", a.getAttribute("data-tab") === route.tab); });
 }
-window.addEventListener("hashchange", function(){ window.scrollTo(0,0); render(); });
+window.addEventListener("hashchange", function(){
+  // Bestätigungs- oder Passwort-Link kann auch in ein offenes Fenster fallen
+  if(consumeAuthHash()) return;
+  window.scrollTo(0,0);
+  render();
+});
 
 /* Tageswechsel abfangen, wenn die App im Hintergrund lag */
 var lastDay = dkey();
 document.addEventListener("visibilitychange", function(){
   if(document.hidden){ save(); return; }
-  if(dkey() !== lastDay){ lastDay = dkey(); ui.day = dkey(); render(); }
+  if(dkey() !== lastDay){ lastDay = dkey(); ui.day = dkey(); ui.sections = null; render(); }
   doSync(true);
 });
 window.addEventListener("online", function(){ doSync(true); });
 window.addEventListener("beforeunload", function(){ clearTimeout(saveTimer); save(); });
 
 save();
+consumeAuthHash();
 if(!location.hash) location.hash = "#/tagebuch";
 render();
 doSync(true);

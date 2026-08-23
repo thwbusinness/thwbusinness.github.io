@@ -16,6 +16,25 @@ zusammenlaufen – begleitend zu einem 8-Wochen-Manifestationsprogramm.
 | **Archiv** | Alle Einträge chronologisch, Volltextsuche, Sprung zum jeweiligen Tag. |
 | **Mehr** | Konto & Sync, Name, JSON-Backup & Import, Tagebuch als Textdatei exportieren, Reset. |
 
+## Registrierung & Anmeldung
+
+Sobald eine Verbindung konfiguriert ist, startet die App mit einem Willkommensbildschirm:
+
+- **Konto anlegen** – Vorname, E-Mail, Passwort (mit Wiederholung). Verlangt Supabase eine
+  Bestätigungsmail, wird darauf hingewiesen; der Link aus der Mail meldet direkt an.
+- **Anmelden** – inklusive **Passwort vergessen**: Der Link aus der Mail führt auf einen
+  Bildschirm zum Setzen eines neuen Passworts.
+- **Ohne Konto starten** – die App bleibt rein lokal nutzbar. Unter *Mehr → Konto & Sync*
+  lässt sich später ein Konto anlegen; die bis dahin lokal geschriebenen Einträge werden
+  beim ersten Abgleich übernommen.
+
+Fehlermeldungen von Supabase werden auf Deutsch übersetzt (falsches Passwort, Konto
+existiert bereits, E-Mail nicht bestätigt, Datenbank nicht eingerichtet, keine Verbindung).
+
+**In Supabase einzustellen:** Unter *Authentication → URL Configuration* muss
+`https://thwbusinness.github.io/frequenz/` als Site URL und als Redirect URL eingetragen sein –
+sonst zeigen die Links aus den Bestätigungs- und Passwort-Mails ins Leere.
+
 ## Datenbank & Sync (optional)
 
 Ohne Konfiguration läuft die App rein lokal. Mit einem Supabase-Projekt dahinter
