@@ -148,6 +148,9 @@ details.sec .body{padding:0 18px 18px}
 .dots button{width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.22);
   font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .dots button.on{background:linear-gradient(135deg,#a78bfa,#8b5cf6);border-color:transparent;color:#fff;font-weight:700}
+.dots button.today{border-color:var(--gold);color:var(--gold)}
+.dots button.today.on{border-color:var(--gold);color:#fff}
+.dots button.future{opacity:.4}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;
   padding:8px 10px calc(8px + var(--safe-b));
@@ -333,6 +336,22 @@ function hasContent(e){
             .concat(e.morning.dank).join("").trim();
   return txt.length > 0;
 }
+/* Ein Tag zählt für das 8-Wochen-Programm, wenn die tägliche Runde
+   wirklich gedreht wurde: Frequenz erfasst, morgens ausgerichtet,
+   abends abgeschlossen. Nichts davon wird von Hand abgehakt. */
+function dayChecklist(k){
+  var e = S.journal[k] || emptyEntry(k);
+  var morgens = countFilled([e.morning.absicht].concat(e.morning.dank)) > 0;
+  var abends  = countFilled([e.evening.gelungen, e.evening.dankbar, e.evening.losgelassen, e.evening.morgen]) > 0;
+  return [
+    { k:"freq",   t:"Frequenz eingetragen",              ok: e.morning.level !== null || e.evening.level !== null },
+    { k:"morgen", t:"Morgens ausgerichtet oder gedankt", ok: morgens },
+    { k:"abend",  t:"Abendseite ausgefüllt",             ok: abends }
+  ];
+}
+function dayComplete(k){
+  return dayChecklist(k).every(function(x){ return x.ok; });
+}
 function filledDays(){
   return Object.keys(S.journal).filter(function(k){ return hasContent(S.journal[k]); }).sort();
 }
@@ -507,6 +526,7 @@ function autosave(){
     syncSoon();
   }, 400);
   updateCounts();
+  updateDayStatus();
 }
 function autoGrow(el){ el.style.height = "auto"; el.style.height = (el.scrollHeight + 2) + "px"; }
 
@@ -634,12 +654,47 @@ function viewTagebuch(){
       ${boosterList(d, dayLevel(e))}
     </div>` : ""}
 
+    <div class="card">
+      <div class="between" style="margin-bottom:6px">
+        <h2>Tagesabschluss</h2>
+        <span class="tag" id="dayBadge"></span>
+      </div>
+      <div class="sub" id="daySub"></div>
+      ${dayChecklist(d).map(function(x){
+        return `<div class="check" data-dayitem="${x.k}" style="cursor:default">
+          <span class="box"></span><span class="lbl small">${esc(x.t)}</span></div>`;
+      }).join("")}
+    </div>
+
     <a class="btn wide" href="#/archiv" style="margin-bottom:14px">Archiv &amp; Suche</a>
   `;
 }
 
 function countFilled(arr){
   return arr.filter(function(x){ return String(x || "").trim(); }).length;
+}
+/* Die Tagesabschluss-Karte ohne Neuzeichnen mitziehen, damit sie
+   beim Tippen sofort stimmt und der Fokus im Feld bleibt. */
+function updateDayStatus(){
+  var list = dayChecklist(ui.day);
+  var alle = list.every(function(x){ return x.ok; });
+  list.forEach(function(x){
+    var el = $('[data-dayitem="' + x.k + '"]');
+    if(!el) return;
+    el.classList.toggle("done", x.ok);
+    el.querySelector(".box").textContent = x.ok ? "✓" : "";
+  });
+  var badge = $("#dayBadge");
+  if(badge){
+    badge.textContent = alle ? "abgeschlossen ✦" : (list.filter(function(x){ return x.ok; }).length + "/3");
+    badge.style.color = alle ? "var(--mint)" : "";
+  }
+  var sub = $("#daySub");
+  if(sub){
+    sub.textContent = alle
+      ? "Dieser Tag zählt für dein 8-Wochen-Programm."
+      : "Sobald diese drei Punkte stehen, zählt der Tag im Programm.";
+  }
 }
 function updateCounts(){
   var e = entryOf(ui.day);
@@ -662,6 +717,7 @@ function affirmationOfDay(d){
 
 function bindTagebuch(){
   updateCounts();
+  updateDayStatus();
   bindBoosters();
   $$("[data-sec]").forEach(function(d){
     d.addEventListener("toggle", function(){ ui.sections[d.getAttribute("data-sec")] = d.open; });
@@ -695,6 +751,7 @@ function bindTagebuch(){
       var lab = $(which === "morning" ? "#mLvlVal" : "#eLvlVal");
       if(lab) lab.textContent = v;
       autosave();
+      updateDayStatus();
     });
     r.addEventListener("change", function(){ render(); });
   });
@@ -819,15 +876,21 @@ function viewWochen(){
   }
 
   var cur = weekInfo(dkey());
-  var totalDone = p.weeks.reduce(function(a,w){ return a + w.tage.filter(Boolean).length; }, 0);
   var ende = addDays(p.start, 55);
+  var totalDone = 0;
+  for(var di = 0; di < 56; di++){ if(dayComplete(addDays(p.start, di))) totalDone++; }
 
   var cards = p.weeks.map(function(w, i){
     var open = ui.openWeek === i;
     var isNow = cur && cur.idx === i;
     var isPast = cur ? i < cur.idx : daysBetween(p.start, dkey()) > 55;
-    var done = w.tage.filter(Boolean).length;
     var from = addDays(p.start, i*7), to = addDays(p.start, i*7+6);
+    var tage = [];
+    for(var t = 0; t < 7; t++){
+      var dk = addDays(p.start, i*7 + t);
+      tage.push({ key:dk, ok:dayComplete(dk), heute: dk === dkey(), zukunft: dk > dkey() });
+    }
+    var done = tage.filter(function(x){ return x.ok; }).length;
 
     return `<div class="week ${isNow ? "now" : ""} ${isPast && !isNow ? "past" : ""}">
       <div class="between">
@@ -838,8 +901,9 @@ function viewWochen(){
         <button class="btn sm ghost" data-week="${i}">${open ? "Schließen" : "Öffnen"}</button>
       </div>
       <div class="tiny muted" style="margin-top:4px">${fmtShort(from)} – ${fmtShort(to)} · ${done}/7 Tage</div>
-      <div class="dots">${w.tage.map(function(t, di){
-        return `<button class="${t ? "on" : ""}" data-tick="${i}.${di}" title="Tag ${di+1}">${di+1}</button>`;
+      <div class="dots">${tage.map(function(t, di){
+        return `<button class="${t.ok ? "on" : ""} ${t.heute ? "today" : ""} ${t.zukunft ? "future" : ""}"
+          data-goday="${t.key}" title="${fmtShort(t.key)}${t.ok ? " – abgeschlossen" : (t.zukunft ? " – kommt noch" : " – offen")}">${di+1}</button>`;
       }).join("")}</div>
 
       ${open ? `<div class="mt pop" style="border-top:1px solid var(--line);padding-top:12px">
@@ -865,6 +929,8 @@ function viewWochen(){
         <span class="tag">${Math.round(totalDone/56*100)}%</span>
       </div>
       <div class="mt">${progressBar(totalDone/56*100)}</div>
+      <p class="tiny muted" style="margin-top:8px">Ein Tag füllt sich von selbst, sobald du Frequenz,
+        Morgen- und Abendseite ausgefüllt hast. Tippe einen Tag an, um ihn im Tagebuch zu öffnen.</p>
       ${cur ? `<div class="small" style="margin-top:12px"><b id="curWeekTitle">${esc(cur.week.title)}</b> – <span id="curWeekTask">${esc(cur.week.aufgabe)}</span></div>` : ""}
     </div>
     ${cards}
@@ -889,12 +955,12 @@ function bindWochen(){
       render();
     });
   });
-  $$("[data-tick]").forEach(function(b){
+  $$("[data-goday]").forEach(function(b){
     b.addEventListener("click", function(){
-      var p = b.getAttribute("data-tick").split(".");
-      var w = S.program.weeks[+p[0]];
-      w.tage[+p[1]] = !w.tage[+p[1]];
-      touchMeta(); save(); render();
+      var k = b.getAttribute("data-goday");
+      if(k > dkey()){ toast("Dieser Tag kommt erst noch."); return; }
+      ui.day = k; ui.sections = null;
+      location.hash = "#/tagebuch";
     });
   });
   $$("[data-w]").forEach(function(el){
@@ -1348,7 +1414,9 @@ function journalAsText(){
   if(S.program){
     out.push("──────────────────────────────", "8-WOCHEN-PROGRAMM (Start " + fmtLong(S.program.start) + ")", "");
     S.program.weeks.forEach(function(w, i){
-      out.push("Woche " + (i+1) + ": " + w.title + "  [" + w.tage.filter(Boolean).length + "/7]");
+      var c = 0;
+      for(var t = 0; t < 7; t++){ if(dayComplete(addDays(S.program.start, i*7 + t))) c++; }
+      out.push("Woche " + (i+1) + ": " + w.title + "  [" + c + "/7 Tage abgeschlossen]");
       if(w.fokus) out.push("Fokus: " + w.fokus);
       if(w.aufgabe) out.push("Aufgabe: " + w.aufgabe);
       if(w.reflexion) out.push("Reflexion: " + w.reflexion);
