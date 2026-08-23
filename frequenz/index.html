@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Frequenz &amp; Manifestation</title>
+<meta name="description" content="Tägliche Frequenz führen, Dankbarkeit schreiben und Ziele manifestieren – offline, privat, direkt im Browser." />
+<meta name="theme-color" content="#0b0714" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Frequenz" />
+<style>
+:root{
+  --bg:#0b0714;
+  --bg2:#140d24;
+  --card:rgba(255,255,255,.055);
+  --card2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.10);
+  --txt:#ece7f7;
+  --muted:#9c93b5;
+  --violet:#a78bfa;
+  --gold:#f5c26b;
+  --mint:#6ee7b7;
+  --rose:#f87171;
+  --radius:18px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
+  min-height:100dvh;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 600px at 15% -10%,rgba(167,139,250,.22),transparent 60%),
+    radial-gradient(700px 500px at 95% 8%,rgba(245,194,107,.14),transparent 60%),
+    radial-gradient(800px 700px at 50% 110%,rgba(110,231,183,.12),transparent 60%),
+    linear-gradient(180deg,var(--bg),var(--bg2) 60%,var(--bg));
+}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.02em}
+p{margin:0 0 10px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+a{color:var(--violet)}
+
+/* ---------- Layout ---------- */
+.app{max-width:640px;margin:0 auto;padding:0 16px calc(104px + var(--safe-b));}
+header.top{padding:26px 2px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hello{font-size:13px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+h1.title{font-size:26px;margin-top:4px}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
+  background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted);white-space:nowrap
+}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;margin-bottom:14px;backdrop-filter:blur(14px)
+}
+.card h2{font-size:17px;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:12px}
+.center{text-align:center}
+.mt{margin-top:12px}
+.hidden{display:none !important}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 18px;border-radius:14px;background:var(--card2);border:1px solid var(--line);
+  font-weight:600;font-size:15px;color:var(--txt);text-decoration:none;
+  transition:transform .12s ease,background .2s ease
+}
+a.btn,a.tag{text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(135deg,#8b5cf6,#c084fc);border-color:transparent;color:#fff}
+.btn.gold{background:linear-gradient(135deg,#f5c26b,#e8a13c);border-color:transparent;color:#2a1c05}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%}
+.btn.sm{padding:9px 13px;font-size:14px;border-radius:11px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.iconbtn{width:38px;height:38px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center}
+
+/* ---------- Inputs ---------- */
+label.f{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input[type=text],input[type=date],input[type=number],textarea,select{
+  width:100%;padding:13px 14px;border-radius:13px;background:rgba(0,0,0,.28);
+  border:1px solid var(--line);outline:none
+}
+textarea{min-height:88px;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--violet)}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;background:transparent;height:34px}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:linear-gradient(90deg,#f87171,#f5c26b,#6ee7b7,#a78bfa)}
+input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:linear-gradient(90deg,#f87171,#f5c26b,#6ee7b7,#a78bfa)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;margin-top:-9px;box-shadow:0 2px 12px rgba(0,0,0,.5);border:3px solid #1a1030}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #1a1030}
+
+/* ---------- Chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  padding:8px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);
+  font-size:13.5px;display:inline-flex;align-items:center;gap:6px
+}
+.chip.on{background:rgba(167,139,250,.22);border-color:var(--violet);color:#fff}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.85}
+
+/* ---------- Frequenz-Anzeige ---------- */
+.gauge{display:flex;align-items:center;gap:18px}
+.dial{position:relative;width:112px;height:112px;flex:0 0 112px}
+.dial svg{transform:rotate(-90deg)}
+.dial .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dial .num{font-size:29px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.dial .unit{font-size:11px;color:var(--muted);margin-top:2px}
+.level-name{font-size:19px;font-weight:650}
+
+/* ---------- Checkliste ---------- */
+.check{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.check:last-child{border-bottom:0}
+.box{
+  width:26px;height:26px;flex:0 0 26px;border-radius:9px;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:15px;background:rgba(0,0,0,.2)
+}
+.check.done .box{background:linear-gradient(135deg,#6ee7b7,#34d399);border-color:transparent;color:#04281c}
+.check.done .lbl{color:var(--muted);text-decoration:line-through}
+.lbl{flex:1}
+
+/* ---------- Ziel-Karten ---------- */
+.goal{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:11px}
+.goal.done{opacity:.62}
+.goal .aff{font-size:15.5px;font-style:italic;color:#fff;margin:6px 0 10px;line-height:1.45}
+.bar{height:7px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#a78bfa,#f5c26b)}
+.tag{font-size:11.5px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--muted);text-decoration:none}
+
+/* ---------- Journal ---------- */
+.entry{border-left:2px solid rgba(167,139,250,.5);padding:2px 0 2px 13px;margin-bottom:16px}
+.entry .d{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.entry .t{white-space:pre-wrap;margin-top:4px}
+
+/* ---------- Chart ---------- */
+.chartwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+
+/* ---------- Navigation ---------- */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  padding:8px 10px calc(8px + var(--safe-b));
+  background:rgba(12,7,22,.86);backdrop-filter:blur(18px);border-top:1px solid var(--line)
+}
+nav.tabs .inner{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+nav.tabs a{
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;border-radius:13px;
+  color:var(--muted);text-decoration:none;font-size:10.5px;letter-spacing:.02em
+}
+nav.tabs a.on{color:#fff;background:rgba(167,139,250,.16)}
+nav.tabs svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- Overlay / Atemübung ---------- */
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(6,3,12,.93);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.breath{
+  width:170px;height:170px;border-radius:50%;margin:26px 0;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.9),rgba(167,139,250,.75) 45%,rgba(139,92,246,.25) 70%,transparent 72%);
+  transform:scale(.55);transition:transform 4s cubic-bezier(.4,0,.2,1)
+}
+.breath.big{transform:scale(1)}
+.phase{font-size:22px;font-weight:600;min-height:30px}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:calc(96px + var(--safe-b));transform:translate(-50%,20px);
+  background:#fff;color:#150c26;padding:11px 18px;border-radius:999px;font-weight:600;font-size:14px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:88vw;text-align:center
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+@keyframes pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .25s ease both}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake .3s}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <div class="hello" id="hello">Willkommen</div>
+      <h1 class="title" id="pageTitle">Heute</h1>
+    </div>
+    <div class="badge" id="streakBadge">✦ 0 Tage</div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs">
+  <div class="inner">
+    <a href="#/heute" data-tab="heute"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Heute</a>
+    <a href="#/frequenz" data-tab="frequenz"><svg viewBox="0 0 24 24"><path d="M2 12h3l3-8 4 16 3-11 2 3h5"/></svg>Frequenz</a>
+    <a href="#/manifest" data-tab="manifest"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L20 9.6l-4 3.9 1 5.5-5-2.8-5 2.8 1-5.5-4-3.9 5.8-1.4z"/></svg>Ziele</a>
+    <a href="#/journal" data-tab="journal"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Journal</a>
+    <a href="#/mehr" data-tab="mehr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>Mehr</a>
+  </div>
+</nav>
+
+<div id="toast"></div>
+<div id="overlayHost"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   Frequenz & Manifestation – eine kleine Offline-App.
+   Alle Daten bleiben im localStorage dieses Browsers.
+   ========================================================= */
+
+/* ---------- Speicher ---------- */
+var KEY = "frequenz-app-v1";
+var DEFAULTS = {
+  version: 1,
+  name: "",
+  checkins: {},        // "2026-08-23": {level, emotion, note, boostersDone, ts}
+  rituals: {},         // "2026-08-23": {morgen:true, ...}
+  gratitude: [],       // {id, date, text}
+  reflections: [],     // {id, date, gelungen, loslassen, morgen}
+  goals: [],           // {id, title, affirmation, why, category, targetDate, belief, done, doneAt, createdAt, method, writes:{}}
+  createdAt: null
+};
+
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return Object.assign({}, DEFAULTS, {createdAt: dkey()});
+    var s = JSON.parse(raw);
+    return Object.assign({}, DEFAULTS, s);
+  }catch(e){
+    return Object.assign({}, DEFAULTS, {createdAt: dkey()});
+  }
+}
+var S = load();
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){ toast("Speichern nicht möglich (Speicher voll?)"); }
+}
+
+/* ---------- Helfer ---------- */
+function dkey(d){
+  var t = d ? new Date(d) : new Date();
+  t.setMinutes(t.getMinutes() - t.getTimezoneOffset());
+  return t.toISOString().slice(0,10);
+}
+function addDays(key, n){
+  var d = new Date(key + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return dkey(d);
+}
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+function fmtDate(key){
+  var d = new Date(key + "T12:00:00");
+  return d.toLocaleDateString("de-DE",{weekday:"short", day:"2-digit", month:"short"});
+}
+function fmtLong(key){
+  var d = new Date(key + "T12:00:00");
+  return d.toLocaleDateString("de-DE",{weekday:"long", day:"numeric", month:"long", year:"numeric"});
+}
+function toast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove("on"); }, 2200);
+}
+function $(sel, root){ return (root||document).querySelector(sel); }
+function $$(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+
+/* ---------- Frequenz-Skala ---------- */
+/* An die Bewusstseins-Skala nach David R. Hawkins angelehnt:
+   jede Emotion bekommt einen Richtwert von 0–100. */
+var EMOTIONS = [
+  {n:"Scham",        v:5,  c:"#f87171"},
+  {n:"Schuld",       v:10, c:"#f87171"},
+  {n:"Apathie",      v:16, c:"#f87171"},
+  {n:"Trauer",       v:22, c:"#fb923c"},
+  {n:"Angst",        v:28, c:"#fb923c"},
+  {n:"Verlangen",    v:34, c:"#fbbf24"},
+  {n:"Wut",          v:40, c:"#fbbf24"},
+  {n:"Stolz",        v:46, c:"#f5c26b"},
+  {n:"Mut",          v:55, c:"#a3e635"},
+  {n:"Neutralität",  v:62, c:"#6ee7b7"},
+  {n:"Bereitschaft", v:68, c:"#6ee7b7"},
+  {n:"Annahme",      v:74, c:"#34d399"},
+  {n:"Klarheit",     v:80, c:"#5eead4"},
+  {n:"Liebe",        v:88, c:"#a78bfa"},
+  {n:"Freude",       v:93, c:"#c084fc"},
+  {n:"Frieden",      v:98, c:"#e9d5ff"}
+];
+function bandOf(v){
+  if(v < 30) return {name:"Schwere Frequenz", color:"#f87171", hint:"Dein System will Entlastung – nicht Leistung."};
+  if(v < 50) return {name:"Aufbruch",          color:"#fbbf24", hint:"Bewegung löst mehr als Nachdenken."};
+  if(v < 65) return {name:"Mut & Klarheit",    color:"#a3e635", hint:"Gute Basis: jetzt eine bewusste Entscheidung treffen."};
+  if(v < 80) return {name:"Fließende Frequenz",color:"#6ee7b7", hint:"Ideal, um zu handeln und zu säen."};
+  if(v < 92) return {name:"Hohe Frequenz",     color:"#a78bfa", hint:"Perfekt zum Visualisieren – du bist empfänglich."};
+  return       {name:"Frieden",                color:"#e9d5ff", hint:"Halte diesen Zustand einfach – nichts tun müssen."};
+}
+var BOOSTERS = {
+  low: ["4 Minuten Box-Atmung", "10 Minuten raus an die Luft", "Ein Glas Wasser + Schultern lockern",
+        "Lieblingssong laut hören", "Alles aufschreiben, was drückt – 5 Minuten Gedankenmüll"],
+  mid: ["3 Dinge notieren, die heute gut laufen", "20 Minuten bewegen", "Eine Sache erledigen, die du aufschiebst",
+        "Jemandem eine nette Nachricht schreiben", "Box-Atmung, 4 Runden"],
+  high:["5 Minuten Zielbild visualisieren", "Affirmation 9x schreiben", "Dankbarkeit für etwas, das noch kommt",
+        "Einen mutigen Schritt Richtung Ziel gehen", "Diesen Zustand kurz still genießen"]
+};
+function boostersFor(v){
+  var pool = v < 45 ? BOOSTERS.low : (v < 75 ? BOOSTERS.mid : BOOSTERS.high);
+  return pool;
+}
+
+var RITUALS = [
+  {k:"morgen",  t:"Morgen-Ausrichtung: Wie will ich mich heute fühlen?"},
+  {k:"aff",     t:"Affirmationen gelesen oder gesprochen"},
+  {k:"dank",    t:"3x Dankbarkeit notiert"},
+  {k:"vision",  t:"5 Minuten Zielbild visualisiert"},
+  {k:"koerper", t:"Körper bewegt (Frequenz braucht Fluss)"},
+  {k:"abend",   t:"Abendreflexion abgeschlossen"}
+];
+
+var AFFIRMATIONS = [
+  "Ich bin ein Magnet für Möglichkeiten, die zu mir passen.",
+  "Ich darf empfangen, ohne mich dafür zu rechtfertigen.",
+  "Meine Frequenz entscheidet, was mich erreicht – und ich wähle sie bewusst.",
+  "Alles, was ich brauche, ist bereits auf dem Weg zu mir.",
+  "Ich handle heute wie der Mensch, der mein Ziel bereits lebt.",
+  "Ich bin sicher, ruhig und offen für Neues.",
+  "Ich vertraue dem Timing meines Lebens.",
+  "Fülle ist mein natürlicher Zustand."
+];
+
+var CATEGORIES = ["Business","Finanzen","Gesundheit","Beziehung","Persönlich","Zuhause"];
+
+/* ---------- Auswertungen ---------- */
+function todayCheckin(){ return S.checkins[dkey()] || null; }
+
+function streak(){
+  var n = 0, k = dkey();
+  if(!S.checkins[k]) k = addDays(k, -1);        // heute darf noch offen sein
+  while(S.checkins[k]){ n++; k = addDays(k, -1); }
+  return n;
+}
+function lastDays(n){
+  var out = [], k = dkey();
+  for(var i = n - 1; i >= 0; i--) out.push(addDays(k, -i));
+  return out;
+}
+function avgLevel(days){
+  var vals = days.map(function(d){ return S.checkins[d] ? S.checkins[d].level : null; })
+                 .filter(function(v){ return v !== null; });
+  if(!vals.length) return null;
+  return Math.round(vals.reduce(function(a,b){ return a+b; }, 0) / vals.length);
+}
+function ritualsOf(day){ return S.rituals[day] || {}; }
+function ritualScore(day){
+  var r = ritualsOf(day), n = 0;
+  RITUALS.forEach(function(x){ if(r[x.k]) n++; });
+  return n;
+}
+
+/* =========================================================
+   Bausteine
+   ========================================================= */
+function dial(value, label){
+  var b = bandOf(value);
+  var r = 46, c = 2 * Math.PI * r;
+  var off = c * (1 - Math.max(0, Math.min(100, value)) / 100);
+  return `<div class="dial">
+    <svg width="112" height="112" viewBox="0 0 112 112">
+      <circle cx="56" cy="56" r="${r}" stroke="rgba(255,255,255,.09)" stroke-width="9" fill="none"/>
+      <circle cx="56" cy="56" r="${r}" stroke="${b.color}" stroke-width="9" fill="none"
+        stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
+    </svg>
+    <div class="val"><div class="num">${value}</div><div class="unit">${esc(label || "Frequenz")}</div></div>
+  </div>`;
+}
+
+function progressBar(pct){
+  return `<div class="bar"><i style="width:${Math.max(0,Math.min(100,pct))}%"></i></div>`;
+}
+
+function emptyState(text, cta){
+  return `<div class="card center" style="padding:26px 18px">
+    <div style="font-size:28px;margin-bottom:8px">✦</div>
+    <p class="muted small">${esc(text)}</p>${cta || ""}
+  </div>`;
+}
+
+/* =========================================================
+   Ansicht: HEUTE
+   ========================================================= */
+function viewHeute(){
+  var today = dkey();
+  var ci = todayCheckin();
+  var r = ritualsOf(today);
+  var openGoals = S.goals.filter(function(g){ return !g.done; });
+  var aff = affirmationOfDay(openGoals);
+  var gToday = S.gratitude.filter(function(g){ return g.date === today; });
+
+  var freqCard = ci
+    ? `<div class="card">
+        <div class="gauge">
+          ${dial(ci.level)}
+          <div style="flex:1">
+            <div class="level-name">${esc(bandOf(ci.level).name)}</div>
+            <div class="small muted" style="margin-top:4px">${esc(ci.emotion || "—")} · ${esc(bandOf(ci.level).hint)}</div>
+            <a class="btn sm ghost" style="margin-top:10px" href="#/frequenz">Anpassen</a>
+          </div>
+        </div>
+      </div>`
+    : `<div class="card">
+        <h2>Wo stehst du gerade?</h2>
+        <div class="sub">Ein Check-in dauert 20 Sekunden – und macht deine Frequenz sichtbar.</div>
+        <a class="btn primary wide" href="#/frequenz">Frequenz-Check-in starten</a>
+      </div>`;
+
+  var ritualHtml = RITUALS.map(function(x){
+    return `<button class="check ${r[x.k] ? "done" : ""}" data-ritual="${x.k}">
+      <span class="box">${r[x.k] ? "✓" : ""}</span><span class="lbl">${esc(x.t)}</span>
+    </button>`;
+  }).join("");
+
+  var gratHtml = gToday.length
+    ? gToday.map(function(g){ return `<div class="entry"><div class="t">${esc(g.text)}</div></div>`; }).join("")
+    : `<p class="small muted">Noch nichts notiert. Dankbarkeit ist der schnellste Weg nach oben.</p>`;
+
+  return `
+    ${freqCard}
+
+    <div class="card">
+      <h2>Affirmation des Tages</h2>
+      <div class="sub">Sprich sie langsam – dreimal, mit Betonung.</div>
+      <p style="font-size:18px;font-style:italic;line-height:1.5">„${esc(aff)}"</p>
+      <div class="row mt">
+        <button class="btn sm" id="newAff">Andere zeigen</button>
+        <button class="btn sm gold" id="openBreath">Atemübung</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="between" style="margin-bottom:6px">
+        <h2>Tagesritual</h2>
+        <span class="tag">${ritualScore(today)}/${RITUALS.length}</span>
+      </div>
+      <div class="sub">Kleine Wiederholung schlägt große Vorsätze.</div>
+      ${ritualHtml}
+    </div>
+
+    <div class="card">
+      <h2>Dankbarkeit</h2>
+      <div class="sub">Wofür bist du heute dankbar?</div>
+      <div class="row">
+        <input type="text" id="gratInput" placeholder="Ich bin dankbar für …" maxlength="240" />
+        <button class="btn primary sm" id="gratAdd">+</button>
+      </div>
+      <div class="mt">${gratHtml}</div>
+    </div>
+
+    <div class="card">
+      <div class="between" style="margin-bottom:6px">
+        <h2>Deine Ziele</h2>
+        <a class="tag" href="#/manifest" style="text-decoration:none">alle ansehen</a>
+      </div>
+      ${openGoals.length
+        ? openGoals.slice(0,3).map(goalMini).join("")
+        : `<p class="small muted">Noch kein Ziel angelegt. <a href="#/manifest">Jetzt starten →</a></p>`}
+    </div>
+
+    <div class="card">
+      <h2>Abendreflexion</h2>
+      <div class="sub">Der Tag schließt sauber ab – und dein Unterbewusstsein arbeitet weiter.</div>
+      <a class="btn wide" href="#/journal">Reflexion schreiben</a>
+    </div>
+  `;
+}
+
+function goalMini(g){
+  return `<div class="goal">
+    <div class="between">
+      <strong>${esc(g.title)}</strong>
+      <span class="tag">${g.belief}%</span>
+    </div>
+    <div class="aff" style="margin:6px 0 8px">${esc(g.affirmation)}</div>
+    ${progressBar(g.belief)}
+  </div>`;
+}
+
+function affirmationOfDay(openGoals){
+  var pool = AFFIRMATIONS.slice();
+  openGoals.forEach(function(g){ if(g.affirmation) pool.push(g.affirmation); });
+  var seed = affirmationOfDay._offset || 0;
+  var day = Math.floor(new Date(dkey() + "T12:00:00").getTime() / 86400000);
+  return pool[(day + seed) % pool.length];
+}
+
+function bindHeute(){
+  $$("[data-ritual]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var k = btn.getAttribute("data-ritual"), day = dkey();
+      S.rituals[day] = S.rituals[day] || {};
+      S.rituals[day][k] = !S.rituals[day][k];
+      save();
+      render();
+      if(ritualScore(day) === RITUALS.length) toast("Tagesritual komplett ✦");
+    });
+  });
+  var newAff = $("#newAff");
+  if(newAff) newAff.addEventListener("click", function(){
+    affirmationOfDay._offset = (affirmationOfDay._offset || 0) + 1;
+    render();
+  });
+  var ob = $("#openBreath");
+  if(ob) ob.addEventListener("click", openBreath);
+
+  var add = $("#gratAdd"), inp = $("#gratInput");
+  function addGrat(){
+    var v = inp.value.trim();
+    if(!v){ inp.classList.add("shake"); setTimeout(function(){ inp.classList.remove("shake"); }, 320); return; }
+    S.gratitude.unshift({id:uid(), date:dkey(), text:v});
+    var day = dkey();
+    S.rituals[day] = S.rituals[day] || {};
+    if(S.gratitude.filter(function(g){ return g.date === day; }).length >= 3) S.rituals[day].dank = true;
+    save(); render(); toast("Notiert ✦");
+  }
+  if(add) add.addEventListener("click", addGrat);
+  if(inp) inp.addEventListener("keydown", function(e){ if(e.key === "Enter") addGrat(); });
+}
+
+/* =========================================================
+   Ansicht: FREQUENZ
+   ========================================================= */
+var form = null;
+
+function viewFrequenz(){
+  var ci = todayCheckin();
+  form = form || {
+    level:   ci ? ci.level   : 60,
+    emotion: ci ? ci.emotion : "",
+    note:    ci ? ci.note    : ""
+  };
+  var b = bandOf(form.level);
+
+  var chips = EMOTIONS.map(function(e){
+    return `<button class="chip ${form.emotion === e.n ? "on" : ""}" data-emo="${esc(e.n)}" data-v="${e.v}">
+      <span class="dot" style="color:${e.c}"></span>${esc(e.n)}</button>`;
+  }).join("");
+
+  var boosters = boostersFor(form.level).map(function(t){
+    return `<div class="check" style="cursor:default"><span class="box">✦</span><span class="lbl small">${esc(t)}</span></div>`;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div class="gauge">
+        ${dial(form.level)}
+        <div style="flex:1">
+          <div class="level-name" id="bandName">${esc(b.name)}</div>
+          <div class="small muted" id="bandHint" style="margin-top:4px">${esc(b.hint)}</div>
+        </div>
+      </div>
+      <label class="f">Frequenz-Regler</label>
+      <input type="range" id="lvl" min="0" max="100" step="1" value="${form.level}" />
+      <div class="between tiny muted" style="margin-top:-6px">
+        <span>schwer</span><span>neutral</span><span>leicht</span>
+      </div>
+
+      <label class="f">Welche Emotion trägt gerade?</label>
+      <div class="chips">${chips}</div>
+
+      <label class="f">Was hat dich dahin gebracht? (optional)</label>
+      <textarea id="note" placeholder="Auslöser, Gedanke, Situation …">${esc(form.note)}</textarea>
+
+      <button class="btn primary wide mt" id="saveCi">${ci ? "Check-in aktualisieren" : "Check-in speichern"}</button>
+    </div>
+
+    <div class="card">
+      <h2>Frequenz-Booster</h2>
+      <div class="sub">Passend zu deinem aktuellen Level.</div>
+      ${boosters}
+      <button class="btn wide mt" id="openBreath2">Box-Atmung starten</button>
+    </div>
+
+    <div class="card">
+      <h2>Verlauf</h2>
+      <div class="sub">Die letzten 30 Tage · Ø 7 Tage: ${avgLevel(lastDays(7)) === null ? "–" : avgLevel(lastDays(7))}</div>
+      ${chart30()}
+    </div>
+
+    <div class="card">
+      <h2>Letzte Check-ins</h2>
+      ${historyList()}
+    </div>
+  `;
+}
+
+function chart30(){
+  var days = lastDays(30);
+  var W = 560, H = 150, pad = 12;
+  var stepX = (W - pad * 2) / (days.length - 1);
+  var pts = [], dots = "";
+  days.forEach(function(d, i){
+    var c = S.checkins[d];
+    if(!c) return;
+    var x = pad + i * stepX;
+    var y = H - pad - (c.level / 100) * (H - pad * 2);
+    pts.push([x, y, d, c.level]);
+  });
+  if(!pts.length){
+    return `<p class="small muted">Noch keine Daten – dein erster Check-in startet die Kurve.</p>`;
+  }
+  var line = pts.map(function(p, i){ return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+  var area = line + ` L${pts[pts.length-1][0].toFixed(1)} ${H-pad} L${pts[0][0].toFixed(1)} ${H-pad} Z`;
+  pts.forEach(function(p){
+    dots += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="${bandOf(p[3]).color}"><title>${fmtDate(p[2])}: ${p[3]}</title></circle>`;
+  });
+  var grid = [0,25,50,75,100].map(function(v){
+    var y = H - pad - (v/100) * (H - pad*2);
+    return `<line x1="${pad}" x2="${W-pad}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.07)"/>`;
+  }).join("");
+  return `<div class="chartwrap"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="min-width:320px">
+    <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(167,139,250,.45)"/><stop offset="100%" stop-color="rgba(167,139,250,0)"/>
+    </linearGradient></defs>
+    ${grid}
+    <path d="${area}" fill="url(#fill)"/>
+    <path d="${line}" fill="none" stroke="#c4b5fd" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+  </svg></div>
+  <div class="between tiny muted"><span>${fmtDate(days[0])}</span><span>heute</span></div>`;
+}
+
+function historyList(){
+  var keys = Object.keys(S.checkins).sort().reverse().slice(0, 10);
+  if(!keys.length) return `<p class="small muted">Noch keine Einträge.</p>`;
+  return keys.map(function(k){
+    var c = S.checkins[k], b = bandOf(c.level);
+    return `<div class="check" style="cursor:default">
+      <span class="box" style="background:${b.color};border-color:transparent;color:#150c26;font-size:12px;font-weight:700">${c.level}</span>
+      <span class="lbl">
+        <div class="small">${fmtDate(k)} · ${esc(c.emotion || b.name)}</div>
+        ${c.note ? `<div class="tiny muted" style="margin-top:2px">${esc(c.note)}</div>` : ""}
+      </span>
+    </div>`;
+  }).join("");
+}
+
+function bindFrequenz(){
+  var lvl = $("#lvl");
+  lvl.addEventListener("input", function(){
+    form.level = parseInt(lvl.value, 10);
+    var b = bandOf(form.level);
+    $("#bandName").textContent = b.name;
+    $("#bandHint").textContent = b.hint;
+    var d = $(".dial");
+    if(d) d.outerHTML = dial(form.level);
+  });
+  lvl.addEventListener("change", function(){ render(); });
+
+  $$("[data-emo]").forEach(function(ch){
+    ch.addEventListener("click", function(){
+      form.emotion = ch.getAttribute("data-emo");
+      form.level = parseInt(ch.getAttribute("data-v"), 10);
+      form.note = $("#note").value;
+      render();
+    });
+  });
+
+  $("#note").addEventListener("input", function(e){ form.note = e.target.value; });
+  $("#openBreath2").addEventListener("click", openBreath);
+
+  $("#saveCi").addEventListener("click", function(){
+    var day = dkey();
+    S.checkins[day] = {
+      level: form.level,
+      emotion: form.emotion,
+      note: $("#note").value.trim(),
+      ts: Date.now()
+    };
+    save();
+    toast("Frequenz gespeichert ✦ Streak: " + streak());
+    form = null;
+    location.hash = "#/heute";
+  });
+}
+
+/* =========================================================
+   Ansicht: ZIELE / MANIFESTATION
+   ========================================================= */
+var ui = { goalForm:false, openGoal:null, editId:null };
+
+var METHODS = {
+  "369": {label:"3-6-9 Methode", total:18, hint:"3x morgens, 6x tagsüber, 9x abends schreiben."},
+  "555": {label:"55x5 Methode", total:55, hint:"55x am Stück schreiben, 5 Tage lang."},
+  "frei":{label:"Frei",         total:3,  hint:"3x bewusst schreiben – ohne Regelwerk."}
+};
+
+function viewManifest(){
+  var open = S.goals.filter(function(g){ return !g.done; });
+  var done = S.goals.filter(function(g){ return g.done; });
+
+  return `
+    ${ui.goalForm ? goalForm() : `<button class="btn primary wide" id="newGoal" style="margin-bottom:14px">+ Neues Ziel manifestieren</button>`}
+
+    ${open.length ? open.map(goalCard).join("") : (ui.goalForm ? "" : emptyState(
+      "Noch kein Ziel. Formuliere es so, als wäre es schon da – das ist der ganze Trick."))}
+
+    ${done.length ? `<div class="card">
+      <h2>Manifestiert ✦</h2>
+      <div class="sub">${done.length} ${done.length === 1 ? "Ziel" : "Ziele"} bereits eingetroffen.</div>
+      ${done.map(function(g){
+        return `<div class="check" style="cursor:default"><span class="box" style="background:linear-gradient(135deg,#f5c26b,#e8a13c);border-color:transparent;color:#2a1c05">✓</span>
+          <span class="lbl"><div>${esc(g.title)}</div><div class="tiny muted">${g.doneAt ? fmtDate(g.doneAt) : ""}</div></span>
+          <button class="btn sm ghost" data-reopen="${g.id}">↺</button></div>`;
+      }).join("")}
+    </div>` : ""}
+  `;
+}
+
+function goalForm(){
+  var g = ui.editId ? S.goals.filter(function(x){ return x.id === ui.editId; })[0] : null;
+  return `<div class="card pop">
+    <h2>${g ? "Ziel bearbeiten" : "Neues Ziel"}</h2>
+    <div class="sub">Gegenwart statt Zukunft. „Ich habe" statt „ich will".</div>
+
+    <label class="f">Titel</label>
+    <input type="text" id="gTitle" maxlength="80" placeholder="z.B. 10 Coaching-Kunden" value="${esc(g ? g.title : "")}" />
+
+    <label class="f">Affirmation (im Präsens)</label>
+    <textarea id="gAff" maxlength="240" placeholder="Ich arbeite mit 10 Kunden, die mich schätzen und fair bezahlen.">${esc(g ? g.affirmation : "")}</textarea>
+
+    <label class="f">Warum? Wie fühlt es sich an, wenn es da ist?</label>
+    <textarea id="gWhy" maxlength="400" placeholder="Freiheit, Ruhe im Bauch, planbare Einnahmen …">${esc(g ? g.why : "")}</textarea>
+
+    <div class="grid2">
+      <div>
+        <label class="f">Bereich</label>
+        <select id="gCat">${CATEGORIES.map(function(c){
+          return `<option ${g && g.category === c ? "selected" : ""}>${esc(c)}</option>`;
+        }).join("")}</select>
+      </div>
+      <div>
+        <label class="f">Zieldatum</label>
+        <input type="date" id="gDate" value="${esc(g ? g.targetDate : "")}" />
+      </div>
+    </div>
+
+    <label class="f">Schreib-Methode</label>
+    <select id="gMethod">${Object.keys(METHODS).map(function(k){
+      return `<option value="${k}" ${g && g.method === k ? "selected" : ""}>${esc(METHODS[k].label)} – ${esc(METHODS[k].hint)}</option>`;
+    }).join("")}</select>
+
+    <label class="f">Wie sehr glaubst du bereits daran? <b id="belVal">${g ? g.belief : 50}%</b></label>
+    <input type="range" id="gBelief" min="0" max="100" step="5" value="${g ? g.belief : 50}" />
+
+    <div class="row mt">
+      <button class="btn primary" id="saveGoal" style="flex:1">${g ? "Speichern" : "Ziel anlegen"}</button>
+      <button class="btn ghost" id="cancelGoal">Abbrechen</button>
+    </div>
+  </div>`;
+}
+
+function goalCard(g){
+  var isOpen = ui.openGoal === g.id;
+  var m = METHODS[g.method] || METHODS["369"];
+  var today = dkey();
+  var cnt = (g.writes && g.writes[today]) || 0;
+  var days = g.targetDate ? Math.ceil((new Date(g.targetDate + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000) : null;
+
+  return `<div class="goal">
+    <div class="between">
+      <strong>${esc(g.title)}</strong>
+      <span class="tag">${esc(g.category || "")}</span>
+    </div>
+    <div class="aff">„${esc(g.affirmation)}"</div>
+    ${progressBar(g.belief)}
+    <div class="between tiny muted" style="margin-top:7px">
+      <span>Vertrauen ${g.belief}%</span>
+      <span>${days === null ? "ohne Datum" : (days >= 0 ? "noch " + days + " Tage" : Math.abs(days) + " Tage drüber")}</span>
+    </div>
+
+    <div class="row mt">
+      <button class="btn sm" data-open="${g.id}">${isOpen ? "Schließen" : "Öffnen"}</button>
+      <button class="btn sm gold" data-done="${g.id}">Ist eingetroffen ✦</button>
+    </div>
+
+    ${isOpen ? `<div class="mt pop" style="border-top:1px solid var(--line);padding-top:14px">
+      ${g.why ? `<div class="small muted" style="margin-bottom:12px">${esc(g.why)}</div>` : ""}
+
+      <label class="f">Vertrauen anpassen <b>${g.belief}%</b></label>
+      <input type="range" min="0" max="100" step="5" value="${g.belief}" data-belief="${g.id}" />
+
+      <label class="f">${esc(m.label)} · heute ${cnt}/${m.total}</label>
+      ${progressBar(Math.round(cnt / m.total * 100))}
+      <div class="tiny muted" style="margin-top:6px">${esc(m.hint)}</div>
+      <div class="row mt">
+        <input type="text" data-write="${g.id}" placeholder="Affirmation abtippen …" />
+        <button class="btn primary sm" data-writebtn="${g.id}">✓</button>
+      </div>
+
+      <div class="row mt">
+        <button class="btn sm ghost" data-edit="${g.id}">Bearbeiten</button>
+        <button class="btn sm ghost" data-del="${g.id}" style="color:var(--rose)">Löschen</button>
+      </div>
+    </div>` : ""}
+  </div>`;
+}
+
+function normalize(s){
+  return String(s).toLowerCase().replace(/[^a-zäöüß0-9 ]/gi, "").replace(/\s+/g, " ").trim();
+}
+
+function bindManifest(){
+  var nb = $("#newGoal");
+  if(nb) nb.addEventListener("click", function(){ ui.goalForm = true; ui.editId = null; render(); });
+
+  var cancel = $("#cancelGoal");
+  if(cancel) cancel.addEventListener("click", function(){ ui.goalForm = false; ui.editId = null; render(); });
+
+  var bel = $("#gBelief");
+  if(bel) bel.addEventListener("input", function(){ $("#belVal").textContent = bel.value + "%"; });
+
+  var sg = $("#saveGoal");
+  if(sg) sg.addEventListener("click", function(){
+    var title = $("#gTitle").value.trim();
+    var aff = $("#gAff").value.trim();
+    if(!title || !aff){ toast("Titel und Affirmation ausfüllen"); return; }
+    var data = {
+      title: title, affirmation: aff, why: $("#gWhy").value.trim(),
+      category: $("#gCat").value, targetDate: $("#gDate").value,
+      method: $("#gMethod").value, belief: parseInt($("#gBelief").value, 10)
+    };
+    if(ui.editId){
+      S.goals = S.goals.map(function(g){ return g.id === ui.editId ? Object.assign({}, g, data) : g; });
+      toast("Ziel aktualisiert");
+    }else{
+      S.goals.unshift(Object.assign({id:uid(), done:false, createdAt:dkey(), writes:{}}, data));
+      toast("Ziel angelegt ✦ Jetzt täglich schreiben.");
+    }
+    ui.goalForm = false; ui.editId = null;
+    save(); render();
+  });
+
+  $$("[data-open]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-open");
+      ui.openGoal = ui.openGoal === id ? null : id;
+      render();
+    });
+  });
+
+  $$("[data-belief]").forEach(function(r){
+    r.addEventListener("change", function(){
+      var id = r.getAttribute("data-belief");
+      S.goals.forEach(function(g){ if(g.id === id) g.belief = parseInt(r.value, 10); });
+      save(); render();
+    });
+  });
+
+  $$("[data-done]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-done");
+      S.goals.forEach(function(g){ if(g.id === id){ g.done = true; g.doneAt = dkey(); } });
+      save(); render(); celebrate();
+    });
+  });
+
+  $$("[data-reopen]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-reopen");
+      S.goals.forEach(function(g){ if(g.id === id){ g.done = false; g.doneAt = null; } });
+      save(); render();
+    });
+  });
+
+  $$("[data-edit]").forEach(function(b){
+    b.addEventListener("click", function(){
+      ui.editId = b.getAttribute("data-edit"); ui.goalForm = true; render();
+      window.scrollTo({top:0, behavior:"smooth"});
+    });
+  });
+
+  $$("[data-del]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = b.getAttribute("data-del");
+      if(!confirm("Dieses Ziel wirklich löschen?")) return;
+      S.goals = S.goals.filter(function(g){ return g.id !== id; });
+      save(); render();
+    });
+  });
+
+  $$("[data-writebtn]").forEach(function(b){
+    b.addEventListener("click", function(){ doWrite(b.getAttribute("data-writebtn")); });
+  });
+  $$("[data-write]").forEach(function(i){
+    i.addEventListener("keydown", function(e){ if(e.key === "Enter") doWrite(i.getAttribute("data-write")); });
+  });
+}
+
+function doWrite(id){
+  var g = S.goals.filter(function(x){ return x.id === id; })[0];
+  if(!g) return;
+  var inp = $('[data-write="' + id + '"]');
+  var typed = normalize(inp.value), target = normalize(g.affirmation);
+  if(!typed){ inp.classList.add("shake"); setTimeout(function(){ inp.classList.remove("shake"); }, 320); return; }
+  if(typed !== target && typed.length < target.length * 0.6){
+    inp.classList.add("shake");
+    setTimeout(function(){ inp.classList.remove("shake"); }, 320);
+    toast("Schreib sie ganz aus – das ist der Punkt.");
+    return;
+  }
+  var today = dkey();
+  g.writes = g.writes || {};
+  g.writes[today] = (g.writes[today] || 0) + 1;
+  var m = METHODS[g.method] || METHODS["369"];
+  save();
+  var n = g.writes[today];
+  render();
+  if(n >= m.total) { toast("Tagespensum geschafft ✦"); }
+  else {
+    var again = $('[data-write="' + id + '"]');
+    if(again) again.focus();
+    toast(n + "/" + m.total);
+  }
+  var day = dkey();
+  S.rituals[day] = S.rituals[day] || {};
+  S.rituals[day].aff = true;
+  save();
+}
+
+function celebrate(){
+  toast("✦ Manifestiert. Nimm dir 10 Sekunden, um es wirklich zu fühlen.");
+}
+
+/* =========================================================
+   Ansicht: JOURNAL
+   ========================================================= */
+function viewJournal(){
+  var today = dkey();
+  var refToday = S.reflections.filter(function(r){ return r.date === today; })[0];
+
+  var days = {};
+  S.gratitude.forEach(function(g){ (days[g.date] = days[g.date] || {grat:[], ref:null, ci:null}).grat.push(g); });
+  S.reflections.forEach(function(r){ (days[r.date] = days[r.date] || {grat:[], ref:null, ci:null}).ref = r; });
+  Object.keys(S.checkins).forEach(function(k){ (days[k] = days[k] || {grat:[], ref:null, ci:null}).ci = S.checkins[k]; });
+  var keys = Object.keys(days).sort().reverse();
+
+  var timeline = keys.length ? keys.map(function(k){
+    var d = days[k];
+    return `<div class="card">
+      <div class="between" style="margin-bottom:8px">
+        <strong class="small">${fmtLong(k)}</strong>
+        ${d.ci ? `<span class="tag" style="color:${bandOf(d.ci.level).color}">${d.ci.level} · ${esc(d.ci.emotion || "")}</span>` : ""}
+      </div>
+      ${d.ci && d.ci.note ? `<div class="entry"><div class="d">Frequenz-Notiz</div><div class="t">${esc(d.ci.note)}</div></div>` : ""}
+      ${d.grat.length ? `<div class="entry"><div class="d">Dankbarkeit</div><div class="t">${d.grat.map(function(g){ return "· " + esc(g.text); }).join("\n")}</div></div>` : ""}
+      ${d.ref ? `<div class="entry"><div class="d">Abendreflexion</div><div class="t">${
+          [d.ref.gelungen ? "Gelungen: " + esc(d.ref.gelungen) : "",
+           d.ref.loslassen ? "Losgelassen: " + esc(d.ref.loslassen) : "",
+           d.ref.morgen ? "Morgen: " + esc(d.ref.morgen) : ""].filter(Boolean).join("\n")
+        }</div></div>` : ""}
+    </div>`;
+  }).join("") : emptyState("Dein Journal füllt sich mit jedem Check-in.");
+
+  return `
+    <div class="card">
+      <h2>Abendreflexion · heute</h2>
+      <div class="sub">Drei Fragen, zwei Minuten.</div>
+      <label class="f">Was ist mir heute gelungen?</label>
+      <textarea id="rGel" placeholder="Auch Kleinigkeiten zählen …">${esc(refToday ? refToday.gelungen : "")}</textarea>
+      <label class="f">Was lasse ich heute los?</label>
+      <textarea id="rLos" placeholder="Ärger, Sorge, Erwartung …">${esc(refToday ? refToday.loslassen : "")}</textarea>
+      <label class="f">Wie will ich morgen aufwachen?</label>
+      <textarea id="rMor" placeholder="Ich wache auf und fühle mich …">${esc(refToday ? refToday.morgen : "")}</textarea>
+      <button class="btn primary wide mt" id="saveRef">${refToday ? "Reflexion aktualisieren" : "Reflexion speichern"}</button>
+    </div>
+
+    <div class="card">
+      <h2>Dankbarkeit hinzufügen</h2>
+      <div class="row">
+        <input type="text" id="gratInput" placeholder="Ich bin dankbar für …" maxlength="240" />
+        <button class="btn primary sm" id="gratAdd">+</button>
+      </div>
+    </div>
+
+    ${timeline}
+  `;
+}
+
+function bindJournal(){
+  $("#saveRef").addEventListener("click", function(){
+    var today = dkey();
+    var data = {
+      gelungen: $("#rGel").value.trim(),
+      loslassen: $("#rLos").value.trim(),
+      morgen: $("#rMor").value.trim()
+    };
+    if(!data.gelungen && !data.loslassen && !data.morgen){ toast("Schreib wenigstens einen Satz ✦"); return; }
+    var existing = S.reflections.filter(function(r){ return r.date === today; })[0];
+    if(existing) Object.assign(existing, data);
+    else S.reflections.unshift(Object.assign({id:uid(), date:today}, data));
+    S.rituals[today] = S.rituals[today] || {};
+    S.rituals[today].abend = true;
+    save(); render(); toast("Tag abgeschlossen ✦");
+  });
+  bindHeute(); // Dankbarkeits-Feld verhält sich identisch
+}
+
+/* =========================================================
+   Ansicht: MEHR
+   ========================================================= */
+function viewMehr(){
+  var d30 = lastDays(30), d7 = lastDays(7);
+  var total = Object.keys(S.checkins).length;
+  var doneGoals = S.goals.filter(function(g){ return g.done; }).length;
+  var bestDay = Object.keys(S.checkins).sort(function(a,b){ return S.checkins[b].level - S.checkins[a].level; })[0];
+
+  return `
+    <div class="card">
+      <h2>Deine Zahlen</h2>
+      <div class="sub">Seit ${S.createdAt ? fmtLong(S.createdAt) : "heute"}</div>
+      <div class="grid2">
+        ${stat("Streak", streak() + (streak() === 1 ? " Tag" : " Tage"))}
+        ${stat("Check-ins", String(total))}
+        ${stat("Ø 7 Tage", avgLevel(d7) === null ? "–" : avgLevel(d7))}
+        ${stat("Ø 30 Tage", avgLevel(d30) === null ? "–" : avgLevel(d30))}
+        ${stat("Ziele offen", String(S.goals.length - doneGoals))}
+        ${stat("Manifestiert", String(doneGoals))}
+      </div>
+      ${bestDay ? `<div class="tiny muted mt">Höchste Frequenz: ${fmtLong(bestDay)} mit ${S.checkins[bestDay].level}.</div>` : ""}
+    </div>
+
+    <div class="card">
+      <h2>Dein Name</h2>
+      <div class="sub">Für die Begrüßung – bleibt nur auf diesem Gerät.</div>
+      <div class="row">
+        <input type="text" id="nameInp" maxlength="40" value="${esc(S.name)}" placeholder="Vorname" />
+        <button class="btn primary sm" id="saveName">OK</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Daten</h2>
+      <div class="sub">Alles liegt lokal in diesem Browser. Kein Server, kein Konto.</div>
+      <div class="grid2">
+        <button class="btn" id="exportBtn">Export (.json)</button>
+        <button class="btn" id="importBtn">Import</button>
+      </div>
+      <input type="file" id="fileInp" accept="application/json" class="hidden" />
+      <button class="btn ghost wide mt" id="resetBtn" style="color:var(--rose)">Alle Daten löschen</button>
+      <p class="tiny muted mt">Tipp: Exportiere ab und zu – ein geleerter Browser-Speicher löscht sonst alles.</p>
+    </div>
+
+    <div class="card">
+      <h2>So funktioniert's</h2>
+      <p class="small muted">
+        <b>1. Frequenz messen.</b> Täglich ein Check-in. Die Skala orientiert sich an den Bewusstseinsebenen
+        nach David R. Hawkins – von Scham bis Frieden. Du siehst schwarz auf weiß, was dich hebt und was dich zieht.<br><br>
+        <b>2. Frequenz heben.</b> Passend zu deinem Level bekommst du kleine Booster. Dankbarkeit und Atmung wirken
+        am schnellsten.<br><br>
+        <b>3. Manifestieren.</b> Ziel im Präsens formulieren, täglich schreiben (3-6-9 oder 55x5), Zielbild
+        visualisieren, Vertrauen tracken. Handeln gehört dazu – die App erinnert dich daran.<br><br>
+        <b>4. Abschließen.</b> Abendreflexion, loslassen, schlafen. Wiederholung ist die eigentliche Magie.
+      </p>
+    </div>
+
+    <div class="card center">
+      <p class="tiny muted">Frequenz &amp; Manifestation · v1.0<br>Auf dem Handy: Teilen → „Zum Home-Bildschirm" – dann startet die App wie eine echte App.</p>
+    </div>
+  `;
+}
+
+function stat(label, val){
+  return `<div style="background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:14px;padding:13px">
+    <div class="tiny muted">${esc(label)}</div>
+    <div style="font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:2px">${esc(val)}</div>
+  </div>`;
+}
+
+function bindMehr(){
+  $("#saveName").addEventListener("click", function(){
+    S.name = $("#nameInp").value.trim(); save(); render(); toast("Gespeichert");
+  });
+
+  $("#exportBtn").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(S, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "frequenz-backup-" + dkey() + ".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+
+  $("#importBtn").addEventListener("click", function(){ $("#fileInp").click(); });
+  $("#fileInp").addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var fr = new FileReader();
+    fr.onload = function(){
+      try{
+        var data = JSON.parse(fr.result);
+        if(typeof data !== "object" || !data) throw new Error("bad");
+        if(!confirm("Import überschreibt die aktuellen Daten. Fortfahren?")) return;
+        S = Object.assign({}, DEFAULTS, data);
+        save(); render(); toast("Daten importiert ✦");
+      }catch(err){ toast("Datei konnte nicht gelesen werden"); }
+    };
+    fr.readAsText(f);
+  });
+
+  $("#resetBtn").addEventListener("click", function(){
+    if(!confirm("Wirklich ALLE Daten löschen? Das lässt sich nicht rückgängig machen.")) return;
+    if(!confirm("Sicher? Vorher exportieren wäre klüger.")) return;
+    localStorage.removeItem(KEY);
+    S = Object.assign({}, DEFAULTS, {createdAt: dkey()});
+    save(); render(); toast("Alles zurückgesetzt");
+  });
+}
+
+/* =========================================================
+   Box-Atmung (4-4-4-4)
+   ========================================================= */
+function openBreath(){
+  var host = document.getElementById("overlayHost");
+  host.innerHTML = `<div class="overlay" id="breathOv">
+    <div class="small muted">Box-Atmung · 4 Sekunden je Phase</div>
+    <div class="breath" id="ball"></div>
+    <div class="phase" id="phase">Bereit …</div>
+    <div class="small muted" id="rounds" style="margin-top:6px">Runde 0 von 4</div>
+    <button class="btn wide" id="closeBreath" style="max-width:260px;margin-top:26px">Beenden</button>
+  </div>`;
+  var ball = document.getElementById("ball");
+  var phaseEl = document.getElementById("phase");
+  var roundsEl = document.getElementById("rounds");
+  var phases = [
+    {t:"Einatmen …", big:true},
+    {t:"Halten …",   big:true},
+    {t:"Ausatmen …", big:false},
+    {t:"Halten …",   big:false}
+  ];
+  var i = -1, round = 0, timer;
+
+  function step(){
+    i = (i + 1) % 4;
+    if(i === 0){
+      round++;
+      if(round > 4){ finish(); return; }
+      roundsEl.textContent = "Runde " + round + " von 4";
+    }
+    phaseEl.textContent = phases[i].t;
+    ball.classList.toggle("big", phases[i].big);
+    timer = setTimeout(step, 4000);
+  }
+  function finish(){
+    phaseEl.textContent = "Fertig ✦ Spür kurz nach.";
+    ball.classList.remove("big");
+    setTimeout(close, 2500);
+  }
+  function close(){
+    clearTimeout(timer);
+    host.innerHTML = "";
+  }
+  document.getElementById("closeBreath").addEventListener("click", close);
+  setTimeout(step, 400);
+}
+
+/* =========================================================
+   Router
+   ========================================================= */
+var ROUTES = {
+  heute:    {title:"Heute",         view:viewHeute,    bind:bindHeute},
+  frequenz: {title:"Frequenz",      view:viewFrequenz, bind:bindFrequenz},
+  manifest: {title:"Manifestieren", view:viewManifest, bind:bindManifest},
+  journal:  {title:"Journal",       view:viewJournal,  bind:bindJournal},
+  mehr:     {title:"Mehr",          view:viewMehr,     bind:bindMehr}
+};
+
+function currentRoute(){
+  var h = (location.hash || "#/heute").replace("#/", "").split("/")[0];
+  return ROUTES[h] ? h : "heute";
+}
+
+function greeting(){
+  var h = new Date().getHours();
+  var g = h < 5 ? "Gute Nacht" : h < 11 ? "Guten Morgen" : h < 17 ? "Schönen Tag" : h < 22 ? "Guten Abend" : "Gute Nacht";
+  return S.name ? g + ", " + S.name : g;
+}
+
+function render(){
+  var key = currentRoute(), route = ROUTES[key];
+  document.getElementById("hello").textContent = greeting();
+  document.getElementById("pageTitle").textContent = route.title;
+  var st = streak();
+  document.getElementById("streakBadge").textContent = "✦ " + st + (st === 1 ? " Tag" : " Tage");
+  var v = document.getElementById("view");
+  v.innerHTML = route.view();
+  route.bind();
+  $$("nav.tabs a").forEach(function(a){
+    a.classList.toggle("on", a.getAttribute("data-tab") === key);
+  });
+}
+
+window.addEventListener("hashchange", function(){
+  if(currentRoute() !== "frequenz") form = null;
+  window.scrollTo(0, 0);
+  render();
+});
+
+/* Tageswechsel abfangen, wenn die App im Hintergrund lag */
+var lastDay = dkey();
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden && dkey() !== lastDay){ lastDay = dkey(); form = null; render(); }
+});
+
+if(!S.createdAt){ S.createdAt = dkey(); save(); }
+if(!location.hash) location.hash = "#/heute";
+render();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
