@@ -1,10 +1,13 @@
-/* Verbindung zur Datenbank.
-   Der Anon-Key ist ein öffentlicher Schlüssel – er darf im Repository stehen.
-   Geschützt werden die Daten über Row Level Security in Supabase:
-   jede Zeile gehört einer user_id, und niemand sieht fremde Zeilen.
-   Solange hier nichts eingetragen ist, läuft die App rein lokal;
-   die Werte lassen sich dann auch direkt in der App unter "Mehr" hinterlegen. */
+/* Verbindung zur Datenbank (Supabase).
+
+   Der Publishable Key ist ein öffentlicher Schlüssel – er gehört in den
+   Client und darf im Repository stehen. Geschützt werden die Daten über
+   Row Level Security (siehe supabase.sql): jede Zeile gehört einer
+   user_id, und niemand sieht fremde Zeilen.
+
+   Ist hier nichts eingetragen, läuft die App rein lokal; die Werte
+   lassen sich dann in der App unter "Mehr" hinterlegen. */
 window.FREQUENZ_CONFIG = {
-  url: "",       // z.B. "https://abcdefgh.supabase.co"
-  anonKey: ""    // der "anon public" Key aus Supabase → Project Settings → API
+  url: "https://rqgjpnmiudgcvowiuefx.supabase.co",
+  anonKey: "sb_publishable_YMOtUpe7rkVNHOEuOlmxjg_T2r2bWOD"
 };

@@ -1156,7 +1156,7 @@ function accountCard(){
       <div class="sub">Noch keine Datenbank verbunden – deine Einträge liegen nur auf diesem Gerät.</div>
       <label class="f">Projekt-URL</label>
       <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" />
-      <label class="f">Anon-Key (öffentlicher Schlüssel)</label>
+      <label class="f">Publishable Key (öffentlicher Schlüssel)</label>
       <input type="text" id="cfgKey" placeholder="eyJhbGciOi…" />
       <button class="btn primary wide mt" id="cfgSave">Verbindung speichern</button>
       <p class="tiny muted mt">Der Anon-Key ist zur Veröffentlichung gedacht – geschützt wird über
@@ -1176,7 +1176,7 @@ function accountCard(){
         <button class="btn" id="btnSignup">Konto anlegen</button>
       </div>
       <p class="tiny muted mt" id="syncStatus">${esc(syncStatusText())}</p>
-      <button class="btn ghost wide mt tiny" id="cfgReset">Verbindung ändern</button>
+      ${configIsLocal() ? `<button class="btn ghost wide mt tiny" id="cfgReset">Verbindung ändern</button>` : ""}
     </div>`;
   }
   return `<div class="card">
@@ -1331,9 +1331,17 @@ function bindMehr(){
 var CFG_KEY = "frequenz-config";
 var SESSION_KEY = "frequenz-session";
 var CFG = {};
-try{
-  CFG = Object.assign({}, window.FREQUENZ_CONFIG || {}, JSON.parse(localStorage.getItem(CFG_KEY) || "{}"));
-}catch(e){ CFG = Object.assign({}, window.FREQUENZ_CONFIG || {}); }
+function readConfig(){
+  var shipped = window.FREQUENZ_CONFIG || {};
+  if(shipped.url && shipped.anonKey) return Object.assign({}, shipped);
+  try{ return Object.assign({}, shipped, JSON.parse(localStorage.getItem(CFG_KEY) || "{}")); }
+  catch(e){ return Object.assign({}, shipped); }
+}
+CFG = readConfig();
+function configIsLocal(){
+  var shipped = window.FREQUENZ_CONFIG || {};
+  return !(shipped.url && shipped.anonKey);
+}
 
 function syncConfigured(){ return !!(CFG.url && CFG.anonKey); }
 function baseUrl(){ return String(CFG.url || "").replace(/\/+$/, ""); }
@@ -1543,7 +1551,7 @@ function bindAccount(){
   var cfgReset = $("#cfgReset");
   if(cfgReset) cfgReset.addEventListener("click", function(){
     localStorage.removeItem(CFG_KEY);
-    CFG = Object.assign({}, window.FREQUENZ_CONFIG || {});
+    CFG = readConfig();
     render();
   });
 
