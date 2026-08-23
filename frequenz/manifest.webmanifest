@@ -1,7 +1,7 @@
 {
-  "name": "Frequenz & Manifestation",
+  "name": "Frequenz-Tagebuch",
   "short_name": "Frequenz",
-  "description": "Tägliche Frequenz führen, Dankbarkeit schreiben und Ziele manifestieren.",
+  "description": "Tägliches Frequenz-Tagebuch mit 8-Wochen-Programm und Manifestationszielen.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
