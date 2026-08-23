@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0b0714" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon-192.png" />
-<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Frequenz" />
@@ -19,7 +19,7 @@
   --line:rgba(255,255,255,.10);
   --txt:#ece7f7; --muted:#9c93b5;
   --violet:#a78bfa; --gold:#f5c26b; --mint:#6ee7b7; --rose:#f87171;
-  --radius:18px; --safe-b:env(safe-area-inset-bottom,0px);
+  --radius:18px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -43,7 +43,7 @@ input,textarea,select{font:inherit;color:inherit}
 a{color:var(--violet)}
 
 .app{max-width:640px;margin:0 auto;padding:0 16px calc(104px + var(--safe-b))}
-header.top{padding:24px 2px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+header.top{padding:calc(24px + var(--safe-t)) 2px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .hello{font-size:13px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 h1.title{font-size:25px;margin-top:4px}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
@@ -158,8 +158,8 @@ nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;padding
 nav.tabs a.on{color:#fff;background:rgba(167,139,250,.16)}
 nav.tabs svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
-.overlay{position:fixed;inset:0;z-index:60;background:rgba(6,3,12,.93);backdrop-filter:blur(8px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.overlay{position:fixed;inset:0;z-index:60;padding-top:calc(24px + var(--safe-t));background:rgba(6,3,12,.93);backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding-left:24px;padding-right:24px;padding-bottom:24px;text-align:center}
 .breath{width:170px;height:170px;border-radius:50%;margin:26px 0;
   background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.9),rgba(167,139,250,.75) 45%,rgba(139,92,246,.25) 70%,transparent 72%);
   transform:scale(.55);transition:transform 4s cubic-bezier(.4,0,.2,1)}
