@@ -16,6 +16,20 @@ zusammenlaufen – begleitend zu einem 8-Wochen-Manifestationsprogramm.
 | **Archiv** | Alle Einträge chronologisch, Volltextsuche, Sprung zum jeweiligen Tag. |
 | **Mehr** | Konto & Sync (Passwort ändern, Konto löschen), Erinnerungen, Name, JSON-Backup & Import, Tagebuch als Textdatei exportieren, Reset. |
 
+## Wenn der Abgleich klemmt
+
+Meldet die App unter *Mehr* etwas wie „Could not find the table 'public.app_meta' in the
+schema cache", fehlt das Schema in der Datenbank. Dann erscheint dort ein Knopf
+**Verbindung prüfen**, der jede Tabelle einzeln testet und auflistet, welche fehlt.
+
+Behebung: `supabase.sql` im SQL-Editor **vollständig** ausführen (die Datei ist so
+geschrieben, dass mehrfaches Ausführen nichts kaputt macht), für die Erinnerungen
+zusätzlich `supabase-push.sql`. Danach in der App erneut prüfen.
+
+Bleibt es dabei, obwohl die Tabellen im Table Editor sichtbar sind, hängt der
+Schema-Zwischenspeicher von PostgREST. Ein `notify pgrst, 'reload schema';` im
+SQL-Editor löst das.
+
 ## Wann zählt ein Tag?
 
 Ein Tag zählt für das 8-Wochen-Programm, wenn drei Dinge im Tagesbogen stehen:

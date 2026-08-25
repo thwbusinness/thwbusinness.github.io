@@ -1337,6 +1337,8 @@ function accountCard(){
       <button class="btn primary" id="btnSync" style="flex:1">Jetzt synchronisieren</button>
       <button class="btn ghost" id="btnLogout">Abmelden</button>
     </div>
+    ${syncState.error ? `<button class="btn wide mt" id="btnDiag">Verbindung prüfen</button>
+      <pre id="diagAusgabe" class="tiny muted" style="white-space:pre-wrap;margin-top:10px"></pre>` : ""}
     <p class="tiny muted mt">Geschrieben wird immer zuerst lokal – der Abgleich läuft im Hintergrund
       und holt nach, sobald du wieder Netz hast.</p>
 
@@ -1603,6 +1605,17 @@ function markiereAllesGeaendert(){
 }
 
 var syncState = { running:false, error:null };
+/* Prüft jede Tabelle einzeln, damit beim Einrichten klar ist, was fehlt. */
+function pruefeSchema(){
+  var tabellen = ["journal_entries", "goals", "app_meta", "push_subscriptions"];
+  return ensureToken().then(function(){
+    return Promise.all(tabellen.map(function(t){
+      return api("/rest/v1/" + t + "?select=user_id&limit=1")
+        .then(function(){ return { name:t, ok:true }; })
+        .catch(function(e){ return { name:t, ok:false, grund:e && e.message }; });
+    }));
+  });
+}
 function syncStatusText(){
   if(!syncConfigured()) return "Keine Verbindung eingerichtet";
   if(!loggedIn())       return "Nicht angemeldet – Daten nur auf diesem Gerät";
@@ -1850,6 +1863,25 @@ function bindAccount(){
         delBtn.disabled = false;
         toast("Löschen fehlgeschlagen: " + translateAuthError(e && e.message));
       });
+  });
+
+  var diag = $("#btnDiag");
+  if(diag) diag.addEventListener("click", function(){
+    var aus = $("#diagAusgabe");
+    diag.disabled = true;
+    aus.textContent = "Prüfe …";
+    pruefeSchema().then(function(r){
+      diag.disabled = false;
+      var fehlen = r.filter(function(x){ return !x.ok; });
+      aus.textContent = r.map(function(x){
+        return (x.ok ? "✓ " : "✗ ") + x.name + (x.ok ? "" : "  – " + translateAuthError(x.grund));
+      }).join("\n") + (fehlen.length
+        ? "\n\nFehlende Tabellen anlegen: supabase.sql (und für Erinnerungen supabase-push.sql) im SQL-Editor ausführen, danach hier erneut prüfen."
+        : "\n\nAlles vorhanden – der Abgleich sollte laufen.");
+    }).catch(function(e){
+      diag.disabled = false;
+      aus.textContent = translateAuthError(e && e.message);
+    });
   });
 
   var btnLogout = $("#btnLogout");
@@ -2183,7 +2215,10 @@ function translateAuthError(msg){
   if(/Password should be at least/i.test(msg))    return "Das Passwort ist zu kurz.";
   if(/rate limit|too many/i.test(msg))            return "Zu viele Versuche. Bitte warte einen Moment.";
   if(/Failed to fetch|NetworkError/i.test(msg))   return "Keine Verbindung zum Server. Bist du online?";
-  if(/relation .* does not exist/i.test(msg))     return "Die Datenbank ist noch nicht eingerichtet (supabase.sql ausführen).";
+  if(/relation .* does not exist/i.test(msg) || /schema cache/i.test(msg) || /PGRST205/i.test(msg))
+    return "Die Datenbank ist noch nicht fertig eingerichtet – supabase.sql muss im SQL-Editor laufen.";
+  if(/permission denied/i.test(msg))
+    return "Die Datenbank verweigert den Zugriff – fehlen die Policies aus supabase.sql?";
   return msg || "Unbekannter Fehler.";
 }
 

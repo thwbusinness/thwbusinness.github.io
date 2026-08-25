@@ -25,12 +25,24 @@ node tests/push-test.js    # Erinnerungen: Zustände, Zeiten, sauberes Scheitern
 node tests/ios.js          # Manifest, Service Worker, Schriftgrößen, kein Querscrollen
 node tests/fn-test.js      # Kernlogik von send-reminders (Zeitzonen, Fenster, "schon erledigt?")
 node tests/mail-test.js    # Kernlogik von send-email (Linkaufbau, Vorlagen, Signaturprüfung)
+node tests/diag-test.js    # Diagnose bei fehlenden Tabellen (Nachbau mit MISSING_TABLES=app_meta starten)
 ```
 
 `fn-test.js` und `mail-test.js` brauchen weder Browser noch Server – sie schneiden die
 reinen Funktionen direkt aus den TypeScript-Quellen der Edge Functions heraus und führen
 sie in Node aus. Web Crypto verhält sich dort wie in Deno, die Signaturprüfung wird also
 im Original getestet.
+
+## Datenbank
+
+```bash
+tests/sql-test.sh          # braucht postgresql-16 lokal
+```
+
+Legt eine Wegwerf-Datenbank an, spielt `supabase.sql` und `supabase-push.sql` ein und
+prüft anschließend die Zugriffstrennung: Ein zweiter Nutzer darf fremde Einträge weder
+sehen noch anlegen noch löschen, und ohne Anmeldung gibt es gar keinen Zugriff. Damit ist
+belegt, dass die Policies wirklich greifen – und nicht nur im Nachbau.
 
 ## Wozu der Nachbau
 
