@@ -1,5 +1,10 @@
 # Deutsche E-Mail-Vorlagen für Supabase
 
+> **Nur nötig, wenn Supabase selbst verschickt.** Läuft der *Send Email Hook* auf die
+> Edge Function `send-email` (siehe README), stecken die deutschen Texte bereits im
+> Code und dieses Dokument ist nur noch die Rückfallebene – etwa, wenn du den Hook
+> vorübergehend abschaltest.
+
 Supabase verschickt die Bestätigungs- und Passwort-Mails standardmäßig **auf Englisch**.
 Hier die deutschen Fassungen zum Einfügen unter
 *Authentication → Emails → Templates*.

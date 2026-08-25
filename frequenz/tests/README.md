@@ -23,10 +23,14 @@ node tests/boost-test.js   # Frequenz-Booster abhaken, eigene ergänzen
 node tests/days-test.js    # Tagesabschluss und abgeleitete Wochenpunkte
 node tests/push-test.js    # Erinnerungen: Zustände, Zeiten, sauberes Scheitern ohne Push-Dienst
 node tests/ios.js          # Manifest, Service Worker, Schriftgrößen, kein Querscrollen
-node tests/fn-test.js      # Kernlogik der Edge Function (Zeitzonen, Fenster, "schon erledigt?")
+node tests/fn-test.js      # Kernlogik von send-reminders (Zeitzonen, Fenster, "schon erledigt?")
+node tests/mail-test.js    # Kernlogik von send-email (Linkaufbau, Vorlagen, Signaturprüfung)
 ```
 
-`fn-test.js` braucht keinen Browser und keinen Server.
+`fn-test.js` und `mail-test.js` brauchen weder Browser noch Server – sie schneiden die
+reinen Funktionen direkt aus den TypeScript-Quellen der Edge Functions heraus und führen
+sie in Node aus. Web Crypto verhält sich dort wie in Deno, die Signaturprüfung wird also
+im Original getestet.
 
 ## Wozu der Nachbau
 

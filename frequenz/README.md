@@ -54,6 +54,66 @@ Die Funktion läuft alle fünf Minuten, vergleicht die Ortszeit jeder Anmeldung 
 eingestellten Uhrzeiten und prüft vor dem Senden, ob der Tagesbogen an dieser Stelle
 schon ausgefüllt ist. Tote Anmeldungen (Antwort 404/410) werden automatisch entfernt.
 
+## Mailversand über den eigenen Server
+
+Die Anmelde- und Passwortmails gehen **nicht** über Supabase raus, sondern über die
+Edge Function `send-email`. Supabase ruft sie als *Send Email Hook* auf, die Funktion
+baut die Mail und verschickt sie per SMTP. Vorteile: deutsche Texte und das Design
+liegen im Code, der Absender ist deine Domain, und die Mengenbegrenzung des
+Supabase-Versands entfällt.
+
+### Einrichten
+
+1. **Zugangsdaten besorgen** – funktioniert mit jedem SMTP-Anbieter:
+
+   | Anbieter | Host | Port | Bemerkung |
+   |---|---|---|---|
+   | Eigener Mailserver | z.B. `smtp.deine-domain.de` | 587 | Zugangsdaten vom Hoster |
+   | Resend | `smtp.resend.com` | 587 | Benutzer `resend`, Passwort = API-Key |
+   | Brevo | `smtp-relay.brevo.com` | 587 | Server in der EU |
+   | Mailjet | `in-v3.mailjet.com` | 587 | Server in der EU |
+
+2. **Funktion deployen und Zugangsdaten hinterlegen:**
+   ```
+   supabase functions deploy send-email --no-verify-jwt
+   supabase secrets set SMTP_HOST=... SMTP_PORT=587 SMTP_USER=... SMTP_PASS=... \
+     SMTP_FROM='Frequenz-Tagebuch <noreply@deine-domain.de>' SMTP_MODE=starttls
+   ```
+   `SMTP_MODE=tls` nur bei Port 465.
+
+3. **Hook aktivieren:** Dashboard → *Authentication → Hooks → Send Email Hook*,
+   auf `send-email` zeigen lassen, einschalten. Supabase erzeugt dabei ein Secret
+   (`v1,whsec_…`) – das gehört als `SEND_EMAIL_HOOK_SECRET` in die Secrets der Funktion:
+   ```
+   supabase secrets set SEND_EMAIL_HOOK_SECRET='v1,whsec_...'
+   ```
+   Ohne dieses Secret prüft die Funktion die Signatur nicht und würde Aufrufe von
+   überall annehmen – also unbedingt setzen.
+
+4. **Absenderdomain verifizieren** (SPF, DKIM, bei eigenem Server auch DMARC), sonst
+   landen die Mails im Spam.
+
+5. **Mengenbegrenzung anheben:** Dashboard → *Authentication → Rate Limits* → „Rate limit
+   for sending emails". Die Vorgabe passt zum Testversand, nicht zum echten Betrieb.
+
+### Was die Funktion abdeckt
+
+Registrierung, Passwort vergessen, Magic Link, Einladung, Adressänderung und
+Bestätigungscode – alle auf Deutsch. Der Bestätigungslink wird selbst gebaut
+(`/auth/v1/verify?token=…&type=…&redirect_to=…`).
+
+Der Aufruf von Supabase ist nach dem Standard-Webhooks-Verfahren signiert; die Funktion
+prüft die Signatur und weist Aufrufe ab, die älter als fünf Minuten sind.
+
+### Prüfen
+
+```
+node tests/mail-test.js     # Linkaufbau, alle Vorlagen, Signaturprüfung
+```
+
+Nach dem Deployen: in der App ein Testkonto anlegen und unter *Edge Functions → Logs*
+nachsehen, ob der Aufruf ankam und der Versand geklappt hat.
+
 ## Registrierung & Anmeldung
 
 Sobald eine Verbindung konfiguriert ist, startet die App mit einem Willkommensbildschirm:
