@@ -87,6 +87,11 @@ create trigger trg_meta_synced before insert or update on public.app_meta
 -- Funktion auf. security definer erlaubt das Entfernen aus
 -- auth.users, ohne dass der Client Adminrechte braucht –
 -- gelöscht wird ausschließlich das eigene Konto.
+--
+-- Gegen lokales Postgres geprüft (tests/sql-test.sh). Sollte Supabase
+-- beim Aufruf "permission denied for table users" melden, fehlen dem
+-- Eigentümer der Funktion die Rechte auf auth.users; dann hilft
+--   alter function public.delete_own_account() owner to supabase_auth_admin;
 -- ============================================================
 create or replace function public.delete_own_account()
 returns void

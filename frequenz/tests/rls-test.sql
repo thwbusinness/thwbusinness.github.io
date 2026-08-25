@@ -71,3 +71,27 @@ begin;
   set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
   select 'Thomas nach allem: ' || count(*) || ' Eintrag(e)' from public.journal_entries;
 commit;
+
+-- ---------- Konto löschen entfernt nur das eigene Konto ----------
+begin;
+  set local role authenticated;
+  set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+  insert into public.journal_entries (user_id, date, data, updated_at)
+    values ('22222222-2222-2222-2222-222222222222', current_date, '{"x":1}', 1);
+  insert into public.app_meta (user_id, data, updated_at)
+    values ('22222222-2222-2222-2222-222222222222', '{"name":"Klient"}', 1);
+commit;
+
+begin;
+  set local role authenticated;
+  set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+  select public.delete_own_account();
+commit;
+
+select 'Nach Loeschung – Konten uebrig (muss 1 sein): ' || count(*) from auth.users;
+select 'Thomas noch vorhanden (muss 1 sein): ' || count(*) from auth.users
+  where id = '11111111-1111-1111-1111-111111111111';
+select 'Eintraege des Klienten uebrig (muss 0 sein): ' || count(*) from public.journal_entries
+  where user_id = '22222222-2222-2222-2222-222222222222';
+select 'Eintraege von Thomas uebrig (muss 1 sein): ' || count(*) from public.journal_entries
+  where user_id = '11111111-1111-1111-1111-111111111111';
