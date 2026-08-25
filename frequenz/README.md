@@ -22,9 +22,12 @@ Meldet die App unter *Mehr* etwas wie „Could not find the table 'public.app_me
 schema cache", fehlt das Schema in der Datenbank. Dann erscheint dort ein Knopf
 **Verbindung prüfen**, der jede Tabelle einzeln testet und auflistet, welche fehlt.
 
-Behebung: `supabase.sql` im SQL-Editor **vollständig** ausführen (die Datei ist so
-geschrieben, dass mehrfaches Ausführen nichts kaputt macht), für die Erinnerungen
-zusätzlich `supabase-push.sql`. Danach in der App erneut prüfen.
+Behebung: **`supabase-alles.sql`** im SQL-Editor vollständig ausführen – die Datei
+enthält Schema und Erinnerungen zusammen und ist so geschrieben, dass mehrfaches
+Ausführen nichts kaputt macht. Danach in der App erneut prüfen.
+
+Direkt zum Kopieren:
+`https://raw.githubusercontent.com/thwbusinness/thwbusinness.github.io/main/frequenz/supabase-alles.sql`
 
 Bleibt es dabei, obwohl die Tabellen im Table Editor sichtbar sind, hängt der
 Schema-Zwischenspeicher von PostgREST. Ein `notify pgrst, 'reload schema';` im
@@ -153,8 +156,10 @@ Ohne Konfiguration läuft die App rein lokal. Mit einem Supabase-Projekt dahinte
 synchronisiert sie über alle Geräte:
 
 1. Auf supabase.com ein kostenloses Projekt anlegen.
-2. `supabase.sql` im SQL-Editor ausführen – legt die drei Tabellen an und schaltet
-   Row Level Security ein, sodass jeder Nutzer ausschließlich seine eigenen Zeilen sieht.
+2. **`supabase-alles.sql`** im SQL-Editor ausführen – legt alle vier Tabellen an,
+   schaltet Row Level Security ein und richtet die Erinnerungen mit ein. Die Datei fasst
+   `supabase.sql` und `supabase-push.sql` zusammen, damit einmal Einfügen reicht;
+   mehrfaches Ausführen schadet nicht.
 3. Projekt-URL und den `anon public` Key in `config.js` eintragen (oder in der App unter
    **Mehr → Konto & Sync** hinterlegen, dann bleiben sie nur auf dem Gerät).
 4. In der App Konto anlegen und anmelden.
