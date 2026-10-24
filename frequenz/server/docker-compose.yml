@@ -1,0 +1,59 @@
+# Kompletter Stapel: Datenbank, API und ein Webserver, der sich das
+# TLS-Zertifikat selbst holt. Start:  docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: frequenz
+      POSTGRES_USER: frequenz
+      POSTGRES_PASSWORD: ${DB_PASSWORT:?DB_PASSWORT fehlt in .env}
+    volumes:
+      - db-daten:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frequenz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Kein Port nach außen: nur die API spricht mit der Datenbank.
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://frequenz:${DB_PASSWORT}@db:5432/frequenz
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET fehlt in .env}
+      APP_URL: ${APP_URL}
+      API_URL: ${API_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      REQUIRE_EMAIL_CONFIRM: ${REQUIRE_EMAIL_CONFIRM:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_MODE: ${SMTP_MODE:-starttls}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [api]
+    ports: ["80:80", "443:443"]
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN fehlt in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-daten:/data
+      - caddy-config:/config
+
+volumes:
+  db-daten:
+  caddy-daten:
+  caddy-config:

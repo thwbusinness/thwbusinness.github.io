@@ -1,0 +1,4 @@
+frequenz/server/node_modules/
+frequenz/server/.env
+frequenz/server/backups/
+frequenz/tests/*.png

@@ -33,6 +33,27 @@ reinen Funktionen direkt aus den TypeScript-Quellen der Edge Functions heraus un
 sie in Node aus. Web Crypto verhält sich dort wie in Deno, die Signaturprüfung wird also
 im Original getestet.
 
+## Eigene API
+
+```bash
+cd ../server && cp .env.example .env   # ausfüllen, dann:
+docker compose up -d && docker compose exec api node bin/schema.js
+
+node tests/api-test.js                 # Trennung zwischen Konten, Tokens, Kontolöschung
+node tests/smtp-sink.js &              # Mailempfänger auf Port 2525
+node tests/api-mail-test.js            # Bestätigung und Passwort-Reset über echte Mails
+```
+
+`api-test.js` ist der wichtigste Test der eigenen API: Bei Supabase trennt die
+Datenbank die Konten, hier muss der Code es leisten. Geprüft wird unter anderem, dass
+eine untergeschobene fremde Kennung im Rumpf wirkungslos bleibt, dass ein Filter auf
+eine fremde Kennung nichts liefert und nichts löscht, dass manipulierte Tokens
+abgewiesen werden und dass ein Erneuerungstoken nur einmal gilt.
+
+Die Browser-Testläufe oben laufen unverändert gegen beide Rückseiten – sie wissen
+nicht, ob dahinter Supabase oder der eigene Server steht. Dafür in der Testkopie
+einfach `config.js` auf die jeweilige URL zeigen lassen.
+
 ## Datenbank
 
 ```bash

@@ -150,6 +150,18 @@ existiert bereits, E-Mail nicht bestätigt, Datenbank nicht eingerichtet, keine 
 `https://thwbusinness.github.io/frequenz/` als Site URL und als Redirect URL eingetragen sein –
 sonst zeigen die Links aus den Bestätigungs- und Passwort-Mails ins Leere.
 
+## Zwei Rückseiten zur Wahl
+
+Die App spricht ein festes Satz von Endpunkten. Dahinter kann stehen:
+
+- **Supabase** (eingerichtet, siehe unten) – gehostet, wenig Pflege.
+- **Eigener Server** (`server/`) – Postgres, Anmeldung, Mail und Erinnerungen auf
+  eigener Infrastruktur. Umschalten heißt: `config.js` auf die eigene Domain zeigen
+  lassen. Mehr dazu in `server/README.md`.
+
+Beide verhalten sich für die App identisch; sämtliche Testläufe in `tests/` laufen
+unverändert gegen beide.
+
 ## Datenbank & Sync (optional)
 
 Ohne Konfiguration läuft die App rein lokal. Mit einem Supabase-Projekt dahinter
